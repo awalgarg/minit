@@ -123,6 +123,16 @@ int isup(int service) {
   return (root[service].pid!=0);
 }
 
+void opendevconsole() {
+  int fd;
+  if ((fd=open("/dev/console",O_RDWR|O_NOCTTY))>=0) {
+    dup2(fd,0);
+    dup2(fd,1);
+    dup2(fd,2);
+    if (fd>2) close(fd);
+  }
+}
+
 /* called from inside the service directory, return the PID or 0 on error */
 pid_t forkandexec(int pause,int __stdin,int __stdout) {
   char **argv=0;
@@ -147,13 +157,9 @@ again:
       int fd;
       ioctl(0, TIOCNOTTY, 0);
       setsid();
-      if ((fd=open("/dev/console",O_RDWR|O_NOCTTY))>=0) {
-	dup2(fd,0);
-	dup2(fd,1);
-	dup2(fd,2);
-	ioctl(0, TIOCSCTTY, 1);
-	tcsetpgrp(0, getpgrp());
-      }
+      opendevconsole();
+      ioctl(0, TIOCSCTTY, 1);
+      tcsetpgrp(0, getpgrp());
     }
     close(3);
     close(4);
@@ -330,6 +336,8 @@ main(int argc, char *argv[]) {
 
   if (getpid()==1) {
     int fd;
+    pid_t p;
+    sigset_t ss;
     i_am_init=1;
     reboot(0);
     if ((fd=open("/dev/tty0",O_RDWR|O_NOCTTY))) {
@@ -337,6 +345,23 @@ main(int argc, char *argv[]) {
       close(fd);
     } else
       ioctl(0, KDSIGACCEPT, SIGWINCH);
+    switch (p=fork()) {
+    case 0: /* child */
+      for (fd=1; fd<NSIG; ++fd) signal(fd,SIG_DFL);
+      sigfillset(&ss);
+      sigprocmask(SIG_UNBLOCK,&ss,0);
+      sigdelset(&ss,SIGINT);
+      sigdelset(&ss,SIGQUIT);
+      setsid();
+      ioctl(0,TIOCSCTTY,0);
+      sigsuspend(&ss);
+    case -1:
+      return 1;
+    default:
+      break;
+    }
+    kill(p,SIGKILL);
+    while (waitpid(p,0,0) != p) ;
   }
 /*  signal(SIGPWR,sighandler); don't know what to do about it */
 /*  signal(SIGHUP,sighandler); ??? */
@@ -350,6 +375,9 @@ main(int argc, char *argv[]) {
     pfd.fd=infd;
   pfd.events=POLLIN;
 
+  if (i_am_init) {
+    close(0); close(1); close(2);
+  }
   for (i=1; i<argc; i++) {
     circsweep();
     if (startservice(loadservice(argv[i]),0)) count++;
@@ -378,6 +406,7 @@ main(int argc, char *argv[]) {
 	childhandler();
 	break;
       }
+      opendevconsole();
       _puts("poll failed!\n");
       sulogin();
       /* what should we do if poll fails?! */
