@@ -261,7 +261,8 @@ int main(int argc,char *argv[]) {
 	      ret=1;
 	    } else if (pid==1)
 	      continue;
-	    if (respawn(argv[i],0) || kill(pid,SIGTERM) || kill(pid,SIGCONT)) (void)0;
+	    else
+	      respawn(argv[i],0) || kill(pid,SIGTERM) || kill(pid,SIGCONT);
 	  }
 	  break;
 	case 'u':
