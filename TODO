@@ -1,0 +1,3 @@
+The "sync" support should be done asynchronously, not with waitpid.
+
+
