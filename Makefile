@@ -34,5 +34,12 @@ install:
 	test -d /etc/minit || mkdir /etc/minit
 	-mkfifo -m 600 /etc/minit/in /etc/minit/out
 
-tar: clean
-	cd .. && tar cvvf minit.tar.bz2 minit --use=bzip2 --exclude CVS
+VERSION=minit-$(shell head -1 CHANGES|sed 's/://')
+CURNAME=$(notdir $(shell pwd))
+
+tar: clean rename
+	cd .. && tar cvvf $(VERSION).tar.bz2 $(VERSION) --use=bzip2 --exclude CVS
+
+rename:
+	if test $(CURNAME) != $(VERSION); then cd .. && mv $(CURNAME) $(VERSION); fi
+
