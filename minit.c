@@ -123,6 +123,16 @@ int isup(int service) {
   return (root[service].pid!=0);
 }
 
+static void _puts(const char* s) {
+  write(1,s,strlen(s));
+}
+
+void sulogin() {	/* exiting on an initialization failure is not a good idea for init */
+  char *argv[]={"sulogin",0};
+  if (i_am_init) execve("/sbin/sulogin",argv,environ);
+  exit(1);
+}
+
 #undef debug
 void handlekilled(pid_t killed) {
   int i;
@@ -134,7 +144,8 @@ void handlekilled(pid_t killed) {
   }
 #endif
   if (killed == (pid_t)-1) {
-    write(2,"all services exited.\n",21);
+    _puts("minit: all services exited.\n");
+    sulogin();
     exit(0);
   }
   if (killed==0) return;
@@ -301,16 +312,6 @@ int startservice(int service,int pause) {
   return 0;
 }
 
-void sulogin() {	/* exiting on an initialization failure is not a good idea for init */
-  char *argv[]={"sulogin",0};
-  execve("/sbin/sulogin",argv,environ);
-  exit(1);
-}
-
-static void _puts(const char* s) {
-  write(1,s,strlen(s));
-}
-
 void childhandler() {
   int status;
   pid_t killed;
@@ -420,7 +421,7 @@ main(int argc, char *argv[]) {
 	break;
       }
       opendevconsole();
-      _puts("poll failed!\n");
+      _puts("minit: poll failed!\n");
       sulogin();
       /* what should we do if poll fails?! */
       break;
