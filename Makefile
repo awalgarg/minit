@@ -22,7 +22,7 @@ diet2: minit.c split.o openreadclose.o
 	gcc -nostdlib -g -o minit -pipe minit.c split.c openreadclose.c ../dietlibc/start.o ../dietlibc/dietlibc.a
 
 clean:
-	rm -f *.o minit msvc
+	rm -f *.o minit msvc pidfilehack
 
 test: test.c
 	gcc -nostdlib -o $@ $^ -I../dietlibc/include ../dietlibc/start.o ../dietlibc/dietlibc.a
