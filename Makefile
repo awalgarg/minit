@@ -21,7 +21,7 @@ str_start.o
 	$(DIET) $(CROSS)$(CC) $(CFLAGS) -c $^
 
 clean:
-	rm -f *.o minit msvc pidfilehack hard-reboot
+	rm -f *.o minit msvc pidfilehack hard-reboot write_proc
 
 test: test.c
 	gcc -nostdlib -o $@ $^ -I../dietlibc/include ../dietlibc/start.o ../dietlibc/dietlibc.a

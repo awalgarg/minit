@@ -10,11 +10,13 @@ msvc \- control minit
 .I pid
 ]
 .I service
+[\fI...\fR]
 .SH DESCRIPTION
 .B msvc
 is the management interface to minit.
 .I service
-is the service directory name relative to /etc/minit.
+is the service directory name relative to /etc/minit.  Starting with
+minit 0.9 you can also include /etc/minit/ in the service name.
 .SH OPTIONS
 If no option is given,
 .B msvc
