@@ -12,6 +12,7 @@
 #include <sys/wait.h>
 #include <stdio.h>
 #include <linux/kd.h>
+#include "fmt.h"
 
 #define MINITROOT "/etc/minit"
 
@@ -30,6 +31,8 @@ static struct process {
   char respawn;
   char circular;
   time_t startedat;
+  int __stdin,__stdout;
+  int logservice;
 } *root;
 
 static int maxprocess=-1;
@@ -80,7 +83,7 @@ int addprocess(struct process *p) {
 int loadservice(char *service) {
   struct process tmp;
   int fd;
-  if (*service==0) return 0;
+  if (*service==0) return -1;
   fd=findservice(service);
   if (fd>=0) return fd;
   if (chdir(MINITROOT) || chdir(service)) return -1;
@@ -94,6 +97,19 @@ int loadservice(char *service) {
     tmp.respawn=0;
   tmp.startedat=0;
   tmp.circular=0;
+  tmp.__stdin=0; tmp.__stdout=1;
+  {
+    char *logservice=alloca(strlen(service)+5);
+    strcpy(logservice,service);
+    strcat(logservice,"/log");
+    tmp.logservice=loadservice(logservice);
+    if (tmp.logservice>=0) {
+      int pipefd[2];
+      if (pipe(pipefd)) return -1;
+      root[tmp.logservice].__stdin=pipefd[0];
+      tmp.__stdout=pipefd[1];
+    }
+  }
   addprocess(&tmp);
 }
 
@@ -105,7 +121,7 @@ int isup(int service) {
 }
 
 /* called from inside the service directory, return the PID or 0 on error */
-pid_t forkandexec(int pause) {
+pid_t forkandexec(int pause,int __stdin,int __stdout) {
   char **argv=0;
   int count=0;
   pid_t p;
@@ -148,6 +164,8 @@ again:
       argv[0]++;
     else
       argv[0]=argv0;
+    if (__stdin != 0) dup2(__stdin,0);
+    if (__stdout != 1) dup2(__stdout,1);
     execve("run",argv,environ);
     _exit(0);
   abort:
@@ -175,7 +193,7 @@ int startnodep(int service,int pause) {
   /* step 2: fork and exec service, put PID in data structure */
   if (chdir(MINITROOT) || chdir(root[service].name)) return -1;
   root[service].startedat=time(0);
-  root[service].pid=forkandexec(pause);
+  root[service].pid=forkandexec(pause,root[service].__stdin,root[service].__stdout);
   return root[service].pid;
 }
 
@@ -190,10 +208,12 @@ int startservice(int service,int pause) {
   write(1,root[service].name,strlen(root[service].name));
   write(1,"\n",1);
 #endif
-  if (chdir(MINITROOT) || chdir(root[service].name)) return -1;
   if (root[service].circular)
     return 0;
   root[service].circular=1;
+  if (root[service].logservice>=0)
+    startservice(root[service].logservice,pause);
+  if (chdir(MINITROOT) || chdir(root[service].name)) return -1;
   if ((dir=open(".",O_RDONLY))>=0) {
     if (!openreadclose("depends",&s,&len)) {
       char **argv;
@@ -351,8 +371,7 @@ error:
 	else {
 	  switch (buf[0]) {
 	  case 'p':
-	    i=snprintf(buf,10,"%d",root[idx].pid);
-	    write(outfd,buf,strlen(buf));
+	    write(outfd,buf,fmt_ulong(buf,root[idx].pid));
 	    break;
 	  case 'r':
 	    root[idx].respawn=0;
@@ -381,8 +400,7 @@ ok:
 	    write(outfd,"1",1);
 	    break;
 	  case 'u':
-	    snprintf(buf,10,"%d",time(0)-root[idx].startedat);
-	    write(outfd,buf,strlen(buf));
+	    write(outfd,buf,fmt_ulong(buf,time(0)-root[idx].startedat));
 	  }
 	}
       }

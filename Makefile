@@ -1,27 +1,23 @@
 all: minit msvc pidfilehack
 
 #CFLAGS=-pipe -march=i386 -fomit-frame-pointer -Os -I../dietlibc/include
-CFLAGS=-pipe -fomit-frame-pointer -Os -I../dietlibc/include
-CROSS=arm-linux-
-LDFLAGS=../dietlibc/start.o ../dietlibc/dietlibc.a -lgcc-sf
+DIET=diet
+CC=gcc
+CFLAGS=-pipe -fomit-frame-pointer -Os
+CROSS=
+#CROSS=arm-linux-
+LDFLAGS=-s
 
-minit: minit.o split.o openreadclose.o
-	gcc -g $(LDFLAGS) -o minit $^
+minit: minit.o split.o openreadclose.o fmt_ulong.o
+	$(DIET) $(CROSS)$(CC) $(LDFLAGS) -o minit $^
 
-msvc: msvc.o
-	gcc -g $(LDFLAGS) -o msvc msvc.o
+msvc: msvc.o fmt_ulong.o buffer_1.o buffer_2.o buffer_puts.o \
+buffer_putsflush.o buffer_putulong.o buffer_put.o byte_copy.o \
+buffer_flush.o buffer_stubborn.o buffer_putflush.o
+	$(DIET) $(CROSS)$(CC) $(LDFLAGS) -o msvc $^
 
 %.o: %.c
-	gcc $(CFLAGS) -c $^
-
-diet: minit.c split.o openreadclose.o
-	$(CROSS)gcc -nostdlib -o minit $(CFLAGS) minit.c split.c openreadclose.c $(LDFLAGS)
-	$(CROSS)gcc -nostdlib -o msvc $(CFLAGS) msvc.c $(LDFLAGS)
-	$(CROSS)gcc -nostdlib -o pidfilehack $(CFLAGS) pidfilehack.c $(LDFLAGS)
-	strip -R .note -R .comment minit msvc pidfilehack
-
-diet2: minit.c split.o openreadclose.o
-	gcc -nostdlib -g -o minit -pipe minit.c split.c openreadclose.c ../dietlibc/start.o ../dietlibc/dietlibc.a
+	$(DIET) $(CROSS)$(CC) $(CFLAGS) -c $^
 
 clean:
 	rm -f *.o minit msvc pidfilehack
@@ -30,12 +26,12 @@ test: test.c
 	gcc -nostdlib -o $@ $^ -I../dietlibc/include ../dietlibc/start.o ../dietlibc/dietlibc.a
 
 pidfilehack: pidfilehack.c
-	gcc -nostdlib -pipe -g -o $@ $^ ../dietlibc/start.o ../dietlibc/dietlibc.a
+	$(DIET) $(CROSS)$(CC) $(CFLAGS) -o $@ $^
 
 install:
 	install minit msvc pidfilehack /usr/sbin
 	test -d /etc/minit || mkdir /etc/minit
-	mkfifo -m 600 /etc/minit/in /etc/minit/out
+	-mkfifo -m 600 /etc/minit/in /etc/minit/out
 
 tar: clean
 	cd .. && tar cvvf minit.tar.bz2 minit --use=bzip2 --exclude CVS

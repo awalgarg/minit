@@ -3,22 +3,12 @@
 #include <signal.h>
 #include <stdio.h>
 #include <string.h>
+#include "fmt.h"
+#include "buffer.h"
 
 static int infd,outfd;
 
 static char buf[1500];
-
-unsigned int fmt_ulong(register char *s,register unsigned long u)
-{
-  register unsigned int len; register unsigned long q;
-  len = 1; q = u;
-  while (q > 9) { ++len; q /= 10; }
-  if (s) {
-    s += len;
-    do { *--s = '0' + (u % 10); u /= 10; } while(u); /* handles u == 0 */
-  }
-  return len;
-}
 
 /* return PID, 0 if error */
 pid_t __readpid(char *service) {
@@ -80,7 +70,8 @@ unsigned long uptime(char *service) {
 main(int argc,char *argv[]) {
   int len;
   if (argc<2) {
-    puts("usage: msvc -[uodpchaitko] service\n"
+    buffer_putsflush(buffer_1,
+         "usage: msvc -[uodpchaitko] service\n"
 	 "       msvc -Ppid service\n"
 	  " -u	up; start service with respawn\n"
 	  " -o	once; start service without respawn\n"
@@ -91,32 +82,32 @@ main(int argc,char *argv[]) {
 	  " -a	alarm; send SIGALRM\n"
 	  " -i	intr; send SIGINT\n"
 	  " -t	terminate; send SIGTERM\n"
-	  " -k	kill; send SIGKILL\n");
+	  " -k	kill; send SIGKILL\n\n");
+    return 0;
   }
   infd=open("/etc/minit/in",O_WRONLY);
   outfd=open("/etc/minit/out",O_RDONLY);
   if (infd>=0) {
     while (lockf(infd,F_LOCK,1)) {
-      puts("could not aquire lock!");
+      buffer_putsflush(buffer_2,"could not aquire lock!\n");
       sleep(1);
     }
     if (argc==2) {
       pid_t pid=__readpid(argv[1]);
       if (buf[0]!='0') {
 	unsigned long len;
-	write(1,argv[1],strlen(argv[1]));
-	write(1,": ",2);
-	if (pid==0) write(1,"down ",5);
-	else if (pid==1) write(1,"finished ",9);
+	buffer_puts(buffer_1,argv[1]);
+	buffer_puts(buffer_1,": ");
+	if (pid==0) buffer_puts(buffer_1,"down ");
+	else if (pid==1) buffer_puts(buffer_1,"finished ");
 	else {
-	  write(1,"up (pid ",8);
-	  snprintf(buf,30,"%d) ",pid);
-	  write(1,buf,strlen(buf));
+	  buffer_puts(buffer_1,"up (pid ");
+	  buffer_putulong(buffer_1,pid);
+	  buffer_puts(buffer_1,") ");
 	}
 	len=uptime(argv[1]);
-	snprintf(buf,30,"%d seconds\n",len);
-	write(1,buf,strlen(buf));
-/*	puts(buf); */
+	buffer_putulong(buffer_1,len);
+	buffer_putsflush(buffer_1," seconds\n");
       }
     } else {
       int i;
@@ -132,27 +123,36 @@ main(int argc,char *argv[]) {
 	case 't': sig=SIGTERM; goto dokill; break;
 	case 'k': sig=SIGKILL; goto dokill; break;
 	case 'o': /* TODO: start but don't restart */
-	  if (startservice(argv[2]) || respawn(argv[2],0))
-	    fprintf(stderr,"Could not start %s\n",argv[2]);
+	  if (startservice(argv[2]) || respawn(argv[2],0)) {
+	    buffer_puts(buffer_2,"Could not start ");
+	    buffer_puts(buffer_2,argv[2]);
+	    buffer_putsflush(buffer_2,"\n");
+	  }
 	  break;
 	case 'd': /* TODO: down */
 	  pid=__readpid(argv[2]);
 	  if (pid==0) {
-	    puts("service not found");
+	    buffer_putsflush(buffer_2,"service not found");
 	    return 1;
 	  } else if (pid==1)
 	    return 0;
 	  if (respawn(argv[2],0) || kill(pid,SIGTERM));
 	  break;
 	case 'u': /* TODO: up */
-	  if (startservice(argv[2]) || respawn(argv[2],1))
-	    fprintf(stderr,"Could not start %s\n",argv[2]);
+	  if (startservice(argv[2]) || respawn(argv[2],1)) {
+	    buffer_puts(buffer_2,"Could not start ");
+	    buffer_puts(buffer_2,argv[2]);
+	    buffer_putsflush(buffer_2,"\n");
+	  }
 	  break;
 	case 'P':
 	  pid=atoi(argv[1]+2);
 	  if (pid>1)
-	    if (setpid(argv[2],pid))
-	      fprintf(stderr,"Could not set pid of service %s\n",argv[2]);
+	    if (setpid(argv[2],pid)) {
+	      buffer_puts(buffer_2,"Could not set pid of service ");
+	      buffer_puts(buffer_2,argv[2]);
+	      buffer_putsflush(buffer_2,"\n");
+	    }
 	}
       }
       return 0;
@@ -160,7 +160,9 @@ dokill:
       for (i=2; i<=argc; i++) {
 	pid=__readpid(argv[2]);
 	if (kill(pid,sig)) {
-	  fprintf(stderr,"Could not send signal to PID %d\n",pid);
+	  buffer_puts(buffer_2,"Could not send signal to PID ");
+	  buffer_putulong(buffer_2,pid);
+	  buffer_putsflush(buffer_2,"\n");
 	}
       }
     }
