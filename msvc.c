@@ -108,7 +108,6 @@ void dumpdependencies(char* service) {
 	return;
       }
       i+=2;
-      if (!tmp[3]) break;
     } else {
       if (!tmp[0] && last=='\n') break;
     }

@@ -540,7 +540,7 @@ ok:
 		if (root[i].pid>1 && root[i].father==idx)
 		  write(outfd,root[i].name,str_len(root[i].name)+1);
 	      }
-	      write(outfd,"",1);
+	      write(outfd,"\0",2);
 	    }
 	    break;
 	  }
