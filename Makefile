@@ -48,6 +48,7 @@ install-files:
 	install write_proc hard-reboot $(DESTDIR)/sbin
 	install msvc $(DESTDIR)/bin
 	install -m 4750 shutdown $(DESTDIR)/sbin
+	test -f $(DESTDIR)/sbin/init || ln $(DESTDIR)/sbin/minit $(DESTDIR)/sbin/init
 
 install-fifos:
 	-mkfifo -m 600 $(DESTDIR)/etc/minit/in $(DESTDIR)/etc/minit/out
