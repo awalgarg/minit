@@ -252,7 +252,7 @@ int startservice(int service,int pause,int father) {
   int dir=-1;
   unsigned long len;
   char *s=0;
-  pid_t pid;
+  pid_t pid=0;
   if (service<0) return 0;
   if (root[service].circular)
     return 0;
@@ -293,9 +293,9 @@ int startservice(int service,int pause,int father) {
 #endif
     close(dir);
     dir=-1;
-    return pid;
   }
-  return 0;
+  chdir(MINITROOT);
+  return pid;
 }
 
 void sulogin() {	/* exiting on an initialization failure is not a good idea for init */
@@ -374,14 +374,14 @@ int main(int argc, char *argv[]) {
     sa.sa_handler=sigint; sigaction(SIGINT,&sa,0);	/* ctrl-alt-del */
     sa.sa_handler=sigwinch; sigaction(SIGWINCH,&sa,0);	/* keyboard request */
   }
-  
+
   if (infd<0 || outfd<0) {
     _puts("minit: could not open " MINITROOT "/in or " MINITROOT "/out\n");
     sulogin();
     nfds=0;
   } else
     pfd.fd=infd;
- pfd.events=POLLIN;
+  pfd.events=POLLIN;
 
   fcntl(infd,F_SETFD,FD_CLOEXEC);
   fcntl(outfd,F_SETFD,FD_CLOEXEC);
@@ -451,9 +451,9 @@ int main(int argc, char *argv[]) {
 
 /*	write(1,buf,str_len(buf)); write(1,"\n",1); */
 #ifdef UPDATE
-       if(!strcmp(buf,"update")) {
-         execve("/sbin/minit",argv, environ);
-       }
+	if(!strcmp(buf,"update")) {
+	  execve("/sbin/minit",argv, environ);
+	}
 
 	if (((buf[0]!='U') && buf[0]!='s') && ((idx=findservice(buf+1))<0)
 	    && strcmp(buf,"d-"))
