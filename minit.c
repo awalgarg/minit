@@ -342,7 +342,6 @@ main(int argc, char *argv[]) {
   if (getpid()==1) {
     int fd;
     pid_t p;
-    sigset_t ss;
     i_am_init=1;
     reboot(0);
     if ((fd=open("/dev/console",O_RDWR|O_NOCTTY))) {
@@ -350,31 +349,30 @@ main(int argc, char *argv[]) {
       close(fd);
     } else
       ioctl(0, KDSIGACCEPT, SIGWINCH);
-#if 0
-    switch (p=fork()) {
-    case 0: /* child */
-      for (fd=1; fd<NSIG; ++fd) signal(fd,SIG_DFL);
-      sigfillset(&ss);
-      sigprocmask(SIG_UNBLOCK,&ss,0);
-      sigdelset(&ss,SIGINT);
-      sigdelset(&ss,SIGQUIT);
-      setsid();
-      ioctl(0,TIOCSCTTY,0);
-      sigsuspend(&ss);
-    case -1:
-      return 1;
-    default:
-      break;
-    }
-    kill(p,SIGKILL);
-    while (waitpid(p,0,0) != p) ;
-#endif
   }
+#if 0
+  {
+    sigset_t a;
+    sigemptyset(&a);
+    sigaddset(&a,SIGCHLD);
+    sigprocmask(SIG_UNBLOCK,&a,0);
+  }
+#endif
 /*  signal(SIGPWR,sighandler); don't know what to do about it */
 /*  signal(SIGHUP,sighandler); ??? */
+  {
+    struct sigaction sa;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags=SA_RESTART;
+    sa.sa_handler=sigchild; sigaction(SIGCHLD,&sa,0);
+    sa.sa_handler=sigint; sigaction(SIGINT,&sa,0);	/* ctrl-alt-del */
+    sa.sa_handler=sigwinch; sigaction(SIGWINCH,&sa,0);	/* keyboard request */
+  }
+#if 0
   signal(SIGWINCH,sigwinch);	/* keyboard request, aka Alt-Up-Arrow */
   signal(SIGINT,sigint);	/* Ctrl-Alt-Del */
   signal(SIGCHLD,sigchild);
+#endif
   if (infd<0 || outfd<0) {
     _puts("minit: could not open /etc/minit/in or /etc/minit/out\n");
     nfds=0;
@@ -407,7 +405,7 @@ main(int argc, char *argv[]) {
       dowait=0; */
       childhandler();
 /*    } */
-    switch (poll(&pfd,nfds,500000)) {
+    switch (poll(&pfd,nfds,5000)) {
     case -1:
       if (errno==EINTR) {
 	childhandler();
