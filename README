@@ -48,3 +48,18 @@ Each service directory can contain the following files/symlinks:
 
 Please see http://cr.yp.to/daemontools/multilog.html for a very good
 logging tool.
+
+minit will try to run the command line arguments as services.  The
+kernel passes its arguments to init.  That means you can for example
+have a service /etc/minit/sos-shell that starts a /bin/sh and then use
+LILO to boot "bzImage sos-shell".  minit will then run that service.
+If none of the services worked (or none were given), minit will spawn
+the service "default".  The normal way to configure minit is to have
+default be an empty service and just list all the services you want
+minit to start at boot time in default/depends.
+
+Other special services (besides "default") are "ctrlaltdel" and "kbreq".
+ctrlaltdel will be run when the console user presses ctrl-alt-del and is
+meant to reboot the computer.  kbreq is the keyboard request, which
+can be mapped using loadkeys.  On my box, it is on Alt+Arrow-Up.  I use
+it to shut down the computer.
