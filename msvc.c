@@ -311,6 +311,9 @@ dokill:
 	if (!pid) {
 	  carp(argv[i],": no such service");
 	  ret=1;
+	} else if (pid==1) {
+	  carp(argv[i],": service not running");
+	  ret=1;
 	} else if (kill(pid,sig)) {
 	  char tmp[FMT_ULONG];
 	  char tmp2[FMT_ULONG];
