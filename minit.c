@@ -14,6 +14,7 @@
 #include <linux/kd.h>
 #include <sys/ioctl.h>
 #include "fmt.h"
+#include "str.h"
 
 #define MINITROOT "/etc/minit"
 
@@ -103,7 +104,7 @@ int loadservice(char *service) {
   tmp.circular=0;
   tmp.__stdin=0; tmp.__stdout=1;
   {
-    char *logservice=alloca(strlen(service)+5);
+    char *logservice=alloca(str_len(service)+5);
     strcpy(logservice,service);
     strcat(logservice,"/log");
     tmp.logservice=loadservice(logservice);
@@ -131,7 +132,7 @@ void handlekilled(pid_t killed) {
   {
     char buf[50];
     snprintf(buf,50," %d\n",killed);
-    write(2,buf,strlen(buf));
+    write(2,buf,str_len(buf));
   }
 #endif
   if (killed == (pid_t)-1) {
@@ -270,7 +271,7 @@ int startservice(int service,int pause) {
   if (service<0) return 0;
 #if 0
   write(1,"startservice ",13);
-  write(1,root[service].name,strlen(root[service].name));
+  write(1,root[service].name,str_len(root[service].name));
   write(1,"\n",1);
 #endif
   if (root[service].circular)
@@ -292,12 +293,12 @@ int startservice(int service,int pause) {
 
 #if 0
     write(1,"started service ",17);
-    write(1,root[service].name,strlen(root[service].name));
+    write(1,root[service].name,str_len(root[service].name));
     write(1," -> ",4);
     {
       char buf[10];
       snprintf(buf,10,"%d\n",pid);
-      write(1,buf,strlen(buf));
+      write(1,buf,str_len(buf));
     }
 #endif
     close(dir);
@@ -314,7 +315,7 @@ void sulogin() {	/* exiting on an initialization failure is not a good idea for 
 }
 
 static void _puts(const char* s) {
-  write(1,s,strlen(s));
+  write(1,s,str_len(s));
 }
 
 void childhandler() {
@@ -436,7 +437,7 @@ main(int argc, char *argv[]) {
 	int idx,tmp;
 	buf[i]=0;
 
-/*	write(1,buf,strlen(buf)); write(1,"\n",1); */
+/*	write(1,buf,str_len(buf)); write(1,"\n",1); */
 	if (buf[0]!='s' && ((idx=findservice(buf+1))<0))
 error:
 	  write(outfd,"0",1);
@@ -453,7 +454,7 @@ error:
 	    goto ok;
 	  case 'P':
 	    {
-	      unsigned char *x=buf+strlen(buf)+1;
+	      unsigned char *x=buf+str_len(buf)+1;
 	      unsigned char c;
 	      tmp=0;
 	      while ((c=*x++-'0')<10) tmp=tmp*10+c;

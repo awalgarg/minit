@@ -15,7 +15,7 @@ pid_t __readpid(char *service) {
   int len;
   buf[0]='p';
   strncpy(buf+1,service,1400);
-  write(infd,buf,strlen(buf));
+  write(infd,buf,str_len(buf));
   len=read(outfd,buf,1500);
   if (len<0) return 0;
   buf[len]=0;
@@ -27,7 +27,7 @@ int respawn(char *service,int yesno) {
   int len;
   buf[0]=yesno?'R':'r';
   strncpy(buf+1,service,1400);
-  write(infd,buf,strlen(buf));
+  write(infd,buf,str_len(buf));
   len=read(outfd,buf,1500);
   return (len!=1 || buf[0]=='0');
 }
@@ -38,9 +38,9 @@ int setpid(char *service, pid_t pid) {
   int len;
   buf[0]='P';
   strncpy(buf+1,service,1400);
-  tmp=buf+strlen(buf)+1;
+  tmp=buf+str_len(buf)+1;
   tmp[fmt_ulong(tmp,pid)]=0;
-  write(infd,buf,strlen(buf)+strlen(tmp)+2);
+  write(infd,buf,str_len(buf)+str_len(tmp)+2);
   len=read(outfd,buf,1500);
   return (len!=1 || buf[0]=='0');
 }
@@ -50,7 +50,7 @@ int startservice(char *service) {
   int len;
   buf[0]='s';
   strncpy(buf+1,service,1400);
-  write(infd,buf,strlen(buf));
+  write(infd,buf,str_len(buf));
   len=read(outfd,buf,1500);
   return (len!=1 || buf[0]=='0');
 }
@@ -60,7 +60,7 @@ unsigned long uptime(char *service) {
   int len;
   buf[0]='u';
   strncpy(buf+1,service,1400);
-  write(infd,buf,strlen(buf));
+  write(infd,buf,str_len(buf));
   len=read(outfd,buf,1500);
   if (len<0) return 0;
   buf[len]=0;
