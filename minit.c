@@ -293,6 +293,10 @@ void sigchild(int whatever) { dowait=1; }
 void sigwinch(int sig) { dowinch=1; }
 void sigint(int sig) { doint=1; }
 
+static void _puts(const char* s) {
+  write(1,s,strlen(s));
+}
+
 main(int argc, char *argv[]) {
   /* Schritt 1: argv[1] als Service nehmen und starten */
   int count=0;
@@ -319,7 +323,7 @@ main(int argc, char *argv[]) {
   signal(SIGINT,sigint);	/* Ctrl-Alt-Del */
   signal(SIGCHLD,sigchild);
   if (infd<0 || outfd<0) {
-    puts("minit: could not open /etc/minit/in or /etc/minit/out\n");
+    _puts("minit: could not open /etc/minit/in or /etc/minit/out\n");
     nfds=0;
   } else
     pfd.fd=infd;
@@ -353,7 +357,7 @@ main(int argc, char *argv[]) {
 	childhandler();
 	break;
       }
-      puts("poll failed!\n");
+      _puts("poll failed!\n");
       sulogin();
       /* what should we do if poll fails?! */
       break;

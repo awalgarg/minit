@@ -37,3 +37,11 @@ Each service directory can contain the following files/symlinks:
     mutually exclusive with respawn.  This is meant for static
     initializations like "ifconfig".
 
+  log
+
+    if this directory exists, it is taken as service and minit creates
+    a pipe between stdout of this service and stdin of the log service.
+    If the log service can not be started, this service will block if it
+    writes to stdout.  File descriptors will be reused, i.e. if the log
+    process dies and is restarted, no log entries will be lost and there
+    will be no SIGPIPE.

@@ -1,3 +1,7 @@
+0.5:
+  add "log" subdirectory (see README).
+  get rid of stdio and *printf and switch to routines from libowfat.
+
 0.4:
   add pidfilehack.  It will take the first argument as filename for the
   PID file (i.e. /var/run/sshd.pid), the second argument as service name
