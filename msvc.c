@@ -135,7 +135,7 @@ main(int argc,char *argv[]) {
 	case 'd':
 	  pid=__readpid(argv[2]);
 	  if (pid==0) {
-	    buffer_putsflush(buffer_2,"service not found");
+	    buffer_putsflush(buffer_2,"service not found\n");
 	    goto error;
 	  } else if (pid==1)
 	    return 0;
