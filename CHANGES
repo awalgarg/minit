@@ -4,6 +4,8 @@
   saw that the shutdown from sysvinit actually does what it's supposed
     to do, even with minit, if one uses the -n mode.  It should be quite
     easy to write a nice and clean shutdown for minit now.
+  if a service depends on a service that already finished, don't start
+    it again.
 
 0.6.1:
   fixed msvc and minit handling of msvc -P.

@@ -285,8 +285,11 @@ int startservice(int service,int pause) {
       char **argv;
       int argc,i;
       argv=split(s,'\n',&argc,0,0);
-      for (i=0; i<argc; i++)
-	startservice(loadservice(argv[i]),0);
+      for (i=0; i<argc; i++) {
+	int service=loadservice(argv[i]);
+	if (service>=0 && root[service].pid!=1)
+	  startservice(service,0);
+      }
       fchdir(dir);
     }
     pid=startnodep(service,pause);
