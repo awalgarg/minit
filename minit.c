@@ -475,7 +475,10 @@ error:
 	      tmp=0;
 	      while ((c=*x++-'0')<10) tmp=tmp*10+c;
 	    }
-	    if (tmp>0) pid=tmp;
+	    if (tmp>0) {
+	      if (kill(tmp,0)) goto error;
+	      pid=tmp;
+	    }
 	    root[idx].pid=tmp;
 	    goto ok;
 	  case 's':

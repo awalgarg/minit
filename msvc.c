@@ -124,6 +124,7 @@ main(int argc,char *argv[]) {
       goto error;
     } else {
       int i;
+      int ret=0;
       int sig=0;
       pid_t pid;
       if (argv[1][0]=='-') {
@@ -136,37 +137,43 @@ main(int argc,char *argv[]) {
 	case 't': sig=SIGTERM; goto dokill; break;
 	case 'k': sig=SIGKILL; goto dokill; break;
 	case 'o':
-	  if (startservice(argv[2]) || respawn(argv[2],0)) {
-	    buffer_puts(buffer_2,"Could not start ");
-	    buffer_puts(buffer_2,argv[2]);
-	    buffer_putsflush(buffer_2,"\n");
-	    goto error;
-	  }
+	  for (i=2; i<argc; ++i)
+	    if (startservice(argv[i]) || respawn(argv[i],0)) {
+	      buffer_puts(buffer_2,"Could not start ");
+	      buffer_puts(buffer_2,argv[i]);
+	      buffer_putsflush(buffer_2,"\n");
+	      ret=1;
+	    }
 	  break;
 	case 'd':
-	  pid=__readpid(argv[2]);
-	  if (pid==0) {
-	    buffer_putsflush(buffer_2,"service not found\n");
-	    goto error;
-	  } else if (pid==1)
-	    return 0;
-	  if (respawn(argv[2],0) || kill(pid,SIGTERM) || kill(pid,SIGCONT));
+	  for (i=2; i<argc; ++i) {
+	    pid=__readpid(argv[i]);
+	    if (pid==0) {
+	      buffer_puts(buffer_2,"msvc: ");
+	      buffer_puts(buffer_2,argv[i]);
+	      buffer_putsflush(buffer_2,": no such service\n");
+	      ret=1;
+	    } else if (pid==1)
+	      continue;
+	    if (respawn(argv[i],0) || kill(pid,SIGTERM) || kill(pid,SIGCONT));
+	  }
 	  break;
 	case 'u':
-	  if (startservice(argv[2]) || respawn(argv[2],1)) {
-	    buffer_puts(buffer_2,"Could not start ");
-	    buffer_puts(buffer_2,argv[2]);
-	    buffer_putsflush(buffer_2,"\n");
-	    goto error;
-	  }
+	  for (i=2; i<argc; ++i)
+	    if (startservice(argv[i]) || respawn(argv[i],1)) {
+	      buffer_puts(buffer_2,"Could not start ");
+	      buffer_puts(buffer_2,argv[i]);
+	      buffer_putsflush(buffer_2,"\n");
+	      ret=1;
+	    }
 	  break;
 	case 'C':
-	  if (check_remove(argv[2])) {
-	    buffer_puts(buffer_2,"Service ");
-	    buffer_puts(buffer_2,argv[2]);
-	    buffer_putsflush(buffer_2," had terminated or was killed\n");
-	    goto error;
-	  }
+	  for (i=2; i<argc; ++i)
+	    if (check_remove(argv[i])) {
+	      buffer_puts(buffer_2,argv[i]);
+	      buffer_putsflush(buffer_2," had terminated or was killed\n");
+	      ret=1;
+	    }
 	  break;
 	case 'P':
 	  pid=atoi(argv[1]+2);
@@ -175,23 +182,33 @@ main(int argc,char *argv[]) {
 	      buffer_puts(buffer_2,"Could not set pid of service ");
 	      buffer_puts(buffer_2,argv[2]);
 	      buffer_putsflush(buffer_2,"\n");
-	      goto error;
+	      ret=1;
 	    }
 	}
       }
-      return 0;
+      return ret;
 dokill:
       for (i=2; i<=argc; i++) {
-	pid=__readpid(argv[2]);
+	pid=__readpid(argv[i]);
+	if (!pid) {
+	  buffer_puts(buffer_2,"msvc: ");
+	  buffer_puts(buffer_2,argv[i]);
+	  buffer_putsflush(buffer_2,": no such service!\n");
+	  ret=1;
+	}
 	if (kill(pid,sig)) {
-	  buffer_puts(buffer_2,"Could not send signal to PID ");
+	  buffer_puts(buffer_2,"msvc: ");
+	  buffer_puts(buffer_2,argv[i]);
+	  buffer_puts(buffer_2,": could not send signal ");
+	  buffer_putulong(buffer_2,sig);
+	  buffer_puts(buffer_2," to PID ");
 	  buffer_putulong(buffer_2,pid);
 	  buffer_putsflush(buffer_2,"\n");
-error:
-	  return 1;
+	  ret=1;
 	}
       }
-      return 0;
+error:
+      return ret;
     }
   } else {
     buffer_putsflush(buffer_2,"could not open /etc/minit/in or /etc/minit/out\n");
