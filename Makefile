@@ -1,4 +1,4 @@
-all: minit msvc pidfilehack hard-reboot write_proc
+all: minit msvc pidfilehack hard-reboot write_proc killall5
 
 #CFLAGS=-pipe -march=i386 -fomit-frame-pointer -Os -I../dietlibc/include
 DIET=diet
@@ -21,7 +21,7 @@ str_start.o
 	$(DIET) $(CROSS)$(CC) $(CFLAGS) -c $^
 
 clean:
-	rm -f *.o minit msvc pidfilehack hard-reboot write_proc
+	rm -f *.o minit msvc pidfilehack hard-reboot write_proc killall5
 
 test: test.c
 	gcc -nostdlib -o $@ $^ -I../dietlibc/include ../dietlibc/start.o ../dietlibc/dietlibc.a
@@ -33,6 +33,9 @@ hard-reboot: hard-reboot.c
 	$(DIET) $(CROSS)$(CC) $(CFLAGS) -o $@ $^
 
 write_proc: write_proc.c
+	$(DIET) $(CROSS)$(CC) $(CFLAGS) -o $@ $^
+
+killall5: killall5.c
 	$(DIET) $(CROSS)$(CC) $(CFLAGS) -o $@ $^
 
 install-files:

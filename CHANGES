@@ -1,3 +1,8 @@
+0.10:
+  add sample script for /etc/minit/ctrlaltdel/run as
+    control/ctrlaltdel-run (Florian Westphal)
+  add killall5, needs /proc on Linux though (Florian Westphal)
+
 0.9.1:
   fix embarassing typo in msvc (Gelu G. Lupas)
 
