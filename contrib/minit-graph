@@ -6,6 +6,8 @@
 # dot -Tps -o foo.ps foo.dot
 # gv foo.ps
 
+# dot is part of graphviz (http://www.graphviz.org/) --fefe
+
 import os, errno, string
 
 def safe(s):
