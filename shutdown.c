@@ -116,11 +116,12 @@ int minit_serviceDown(char *service) {
     if (i == 0) __write2("\t\tdone\n");
     else __write2("\t\tfailed\n");
   }
-  close(infd); close(outfd);
   return 0;
 }
 
 int minit_shutdown(int level) {
+  int retval;
+
   __write2("Shutting down minit services: \n");
   infd=open("/etc/minit/in", O_WRONLY);
   outfd=open("/etc/minit/out", O_RDONLY);
@@ -131,7 +132,9 @@ int minit_shutdown(int level) {
     }  
   }
 
-  return minit_serviceDown(level?"halt":"reboot");
+  retval=minit_serviceDown(level?"halt":"reboot");
+  close(infd); close(outfd);
+  return retval;
 }
 #endif
 
@@ -243,7 +246,7 @@ int main(int argc, char *const argv[]) {
   /* sync buffers */
   sync();
 
-  exec_cmd("/bin/swapoff", "swapoff", "-a", (char *) 0);
+  exec_cmd("/sbin/swapoff", "swapoff", "-a", (char *) 0);
   exec_cmd("/bin/umount", "umount", "-a", (char *) 0);
   exec_cmd("/bin/mount", "mount", "-o", "remount,ro", "/", (char *) 0);
 
