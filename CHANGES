@@ -26,6 +26,8 @@
   require libowfat instead of shipping half of it ourselves
   replace malloc with alloca; minit is now 6644 bytes on i386.
   add usage for serdo (Nikola Vladov)
+  fix msvc -d followed by msvc -h (would send SIGHUP to pid 1, i.e. kill
+    minit; found by Paul Fox)
 
 0.9.1:
   fix embarassing typo in msvc (Gelu G. Lupas)
