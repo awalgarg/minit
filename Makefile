@@ -29,7 +29,8 @@ pidfilehack: pidfilehack.c
 	$(DIET) $(CROSS)$(CC) $(CFLAGS) -o $@ $^
 
 install:
-	install minit msvc pidfilehack /usr/sbin
+	install minit pidfilehack /usr/sbin
+	install msvc /bin
 	test -d /etc/minit || mkdir /etc/minit
 	-mkfifo -m 600 /etc/minit/in /etc/minit/out
 
