@@ -41,7 +41,7 @@ static inline int __write2(const char*s) { return write(2,s,strlen(s)); }
 #define MINITROOT "/etc/minit"
 #endif
 
-extern void opendevcolsone();
+extern void opendevconsole();
 
 extern char **environ;
 extern int openreadclose(char *fn, char **buf, unsigned long *len);
