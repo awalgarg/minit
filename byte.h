@@ -1,14 +1,16 @@
 #ifndef BYTE_H
 #define BYTE_H
 
+#ifdef __dietlibc__
 #include <sys/cdefs.h>
+#endif
 
 #ifndef __pure__
 #define __pure__
 #endif
 
 /* byte_chr returns the smallest integer i between 0 and len-1
- * inclusive such that one[i] equals needle, or len it not found. */
+ * inclusive such that one[i] equals needle, or len if not found. */
 unsigned int byte_chr(const void* haystack, unsigned int len, char needle) __pure__;
 
 /* byte_rchr returns the largest integer i between 0 and len-1 inclusive
