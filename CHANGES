@@ -1,6 +1,7 @@
 0.6:
-  Added tty and session leadership magic and actually got getty to work
+  add tty and session leadership magic and I actually got getty to work
     as init on my laptop, i.e. in production use!
+  add msvc man page.
 
 0.5.1:
   cut&paste error, set wrong variable to 0 for keyboard request.
