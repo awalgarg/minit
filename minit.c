@@ -359,9 +359,7 @@ main(int argc, char *argv[]) {
   int count=0;
   int i;
   struct pollfd pfd;
-/*  int s=bindsocket(); */
-/*  printf("%d %d\n",infd,outfd);
-  exit(0); */
+  time_t last=time(0);
   int nfds=1;
 
   infd=open("/etc/minit/in",O_RDWR);
@@ -377,14 +375,6 @@ main(int argc, char *argv[]) {
     } else
       ioctl(0, KDSIGACCEPT, SIGWINCH);
   }
-#if 0
-  {
-    sigset_t a;
-    sigemptyset(&a);
-    sigaddset(&a,SIGCHLD);
-    sigprocmask(SIG_UNBLOCK,&a,0);
-  }
-#endif
 /*  signal(SIGPWR,sighandler); don't know what to do about it */
 /*  signal(SIGHUP,sighandler); ??? */
   {
@@ -396,11 +386,6 @@ main(int argc, char *argv[]) {
     sa.sa_handler=sigint; sigaction(SIGINT,&sa,0);	/* ctrl-alt-del */
     sa.sa_handler=sigwinch; sigaction(SIGWINCH,&sa,0);	/* keyboard request */
   }
-#if 0
-  signal(SIGWINCH,sigwinch);	/* keyboard request, aka Alt-Up-Arrow */
-  signal(SIGINT,sigint);	/* Ctrl-Alt-Del */
-  signal(SIGCHLD,sigchild);
-#endif
   if (infd<0 || outfd<0) {
     _puts("minit: could not open /etc/minit/in or /etc/minit/out\n");
     sulogin();
@@ -419,6 +404,7 @@ main(int argc, char *argv[]) {
     int status;
     int i;
     char buf[1501];
+    time_t now;
     if (doint) {
       doint=0;
       startservice(loadservice("ctrlaltdel"),0);
@@ -428,6 +414,49 @@ main(int argc, char *argv[]) {
       startservice(loadservice("kbreq"),0);
     }
     childhandler();
+    now=time(0);
+    if (now<last || now-last>30) {
+      /* The system clock was reset.  Compensate. */
+      long diff=last-now;
+      int j;
+
+#if 0
+      strcpy(buf,"minit: compensating for clock drift: ");
+      i=str_len(buf);
+      if (diff<0) { diff=-diff; buf[i]='-'; ++i; }
+      buf[i+fmt_ulong(buf+i,diff)]=0;
+      strcat(buf," sec.\r\n");
+      _puts(buf);
+      buf[fmt_ulong(buf,maxprocess)]=0;
+      strcat(buf," processes.\r\n");
+      _puts(buf);
+#endif
+
+      for (j=0; j<=maxprocess; ++j) {
+#if 0
+	strcpy(buf,"minit: setting ");
+	strcat(buf,root[j].name);
+	strcat(buf," from ");
+	i=str_len(buf);
+	buf[i+fmt_ulong(buf+i,root[j].startedat)]=0;
+	strcat(buf," to ");
+#endif
+
+	if (root[j].pid>1)
+	  root[j].startedat-=diff;
+
+#if 0
+	i=str_len(buf);
+	buf[i+fmt_ulong(buf+i,root[j].startedat)]=0;
+	strcat(buf," [pid ");
+	i=str_len(buf);
+	buf[i+fmt_ulong(buf+i,root[j].pid)]=0;
+	strcat(buf,"].\r\n");
+	_puts(buf);
+#endif
+      }
+    }
+    last=now;
     switch (poll(&pfd,nfds,5000)) {
     case -1:
       if (errno==EINTR) {

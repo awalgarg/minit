@@ -13,6 +13,9 @@
   msvc now accepts more than one service after -o, -d, ...
   msvc now accepts /etc/minit/sshd instead of sshd as service name
   better error handling in msvc (more and better error messages)
+  minit now has a heuristic to detect time zone changes and still
+    have msvc report the correct elapsed time since process start/end
+    (don't look at the source code, it's ultra-kludgey)
 
 0.8:
   call waitpid repeatedly until it returns "no children".
