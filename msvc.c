@@ -87,6 +87,44 @@ unsigned long uptime(char *service) {
   return atoi(buf);
 }
 
+void dumpdependencies(char* service) {
+  char tmp[16384];
+  int i,j;
+  char first,last;
+  buf[0]='d';
+  addservice(service);
+  write(infd,buf,str_len(buf));
+  first=1; last='x';
+  for (;;) {
+    int prev,done;
+    j=read(outfd,tmp,sizeof(tmp));
+    if (j<1) break;
+    done=i=0;
+    if (first) {
+      if (tmp[0]=='0') {
+	buffer_puts(buffer_2,"msvc: ");
+	buffer_puts(buffer_2,service);
+	buffer_putsflush(buffer_2,": no such service.\n");
+	return;
+      }
+      i+=2;
+      if (!tmp[3]) break;
+    } else {
+      if (!tmp[0] && last=='\n') break;
+    }
+    prev=i;
+    for (; i<j; ++i) if (!tmp[i]) tmp[i]='\n';
+    if (j>1 && tmp[j-1]=='\n' && tmp[j-2]=='\n') { done=1; --j; }
+    if (first)
+      write(1,tmp+2,j-2);
+    else
+      write(1,tmp,j);
+    if (done) break;
+    last=tmp[j-1];
+    first=0;
+  }
+}
+
 int main(int argc,char *argv[]) {
   if (argc<2) {
     buffer_putsflush(buffer_1,
@@ -212,6 +250,10 @@ int main(int argc,char *argv[]) {
 	      buffer_putsflush(buffer_2,"\n");
 	      ret=1;
 	    }
+	  break;
+	case 'D':
+	  dumpdependencies(argv[2]);
+	  break;
 	}
       }
       return ret;

@@ -11,6 +11,7 @@
     upload state to new minit after update (Florian Westphal)
   #include minit.h and use MINITROOT consistently (Lordy)
   Don't assume MINITROOT is 10 bytes long (Erich Schubert)
+  add a way to ask minit for dependencies
 
 0.9.1:
   fix embarassing typo in msvc (Gelu G. Lupas)

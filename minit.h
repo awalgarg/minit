@@ -8,6 +8,7 @@ static struct process {
   char respawn;
   char circular;
   time_t startedat;
+  int father;	/* the service who started me or -1 if I was started directly */
   int __stdin,__stdout;
   int logservice;
 } *root;

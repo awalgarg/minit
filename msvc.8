@@ -73,6 +73,14 @@ Tell minit the PID of the service is really \fIpid\fR.  This is useful
 for services that fork themselves in the background but put their real
 PID in a file, typically called /var/run/\fIservice\fR.pid.  Used by
 \fBpidfilehack\fR.
+.TP
+.B \-D \fIservice\fR
+Print dependencies.
+This will print all the names of all the services that were started
+because this services depended on them.  Please note that this is not
+done recursively (i.e. if default depends on qmail and qmail depends on
+log, this will print qmail, not qmail/log.  But msvc -D qmail will print
+qmail/log).
 .SH "RETURN CODES"
 Generally, msvc return zero if everything is OK or 1 on error (could not
 open /etc/minit/in or /etc/minit/out or there is no process with the

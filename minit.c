@@ -41,7 +41,7 @@ extern char **environ;
 /* return index of service in process data structure or -1 if not found */
 int findservice(char *service) {
   int i;
-  for (i=0; i<=maxprocess; i++) {
+  for (i=0; i<=maxprocess; ++i) {
     if (!strcmp(root[i].name,service))
       return i;
   }
@@ -51,7 +51,7 @@ int findservice(char *service) {
 /* look up process index in data structure by PID */
 int findbypid(pid_t pid) {
   int i;
-  for (i=0; i<=maxprocess; i++) {
+  for (i=0; i<=maxprocess; ++i) {
     if (root[i].pid == pid)
       return i;
   }
@@ -61,7 +61,7 @@ int findbypid(pid_t pid) {
 /* clear circular dependency detection flags */
 void circsweep() {
   int i;
-  for (i=0; i<=maxprocess; i++)
+  for (i=0; i<=maxprocess; ++i)
     root[i].circular=0;
 }
 
@@ -121,7 +121,7 @@ int isup(int service) {
   return (root[service].pid!=0);
 }
 
-int startservice(int service,int pause);
+int startservice(int service,int pause,int father);
 
 #undef debug
 void handlekilled(pid_t killed) {
@@ -149,7 +149,7 @@ void handlekilled(pid_t killed) {
       printf("restarting %s\n",root[i].name);
 #endif
       circsweep();
-      startservice(i,time(0)-root[i].startedat<1);
+      startservice(i,time(0)-root[i].startedat<1,root[i].father);
     } else {
       root[i].startedat=time(0);
       root[i].pid=1;
@@ -248,7 +248,7 @@ int startnodep(int service,int pause) {
   return root[service].pid;
 }
 
-int startservice(int service,int pause) {
+int startservice(int service,int pause,int father) {
   int dir=-1;
   unsigned long len;
   char *s=0;
@@ -257,8 +257,13 @@ int startservice(int service,int pause) {
   if (root[service].circular)
     return 0;
   root[service].circular=1;
+#if 0
+  printf("setting father of %d (%s) to %d (%s)\n",
+	 service,root[service].name,father,father>=0?root[father].name:"[msvc]");
+#endif
+  root[service].father=father;
   if (root[service].logservice>=0)
-    startservice(root[service].logservice,pause);
+    startservice(root[service].logservice,pause,service);
   if (chdir(MINITROOT) || chdir(root[service].name)) return -1;
   if ((dir=open(".",O_RDONLY))>=0) {
     if (!openreadclose("depends",&s,&len)) {
@@ -266,11 +271,11 @@ int startservice(int service,int pause) {
       int depc,i;
       deps=split(s,'\n',&depc,0,0);
       for (i=0; i<depc; i++) {
-	int service;
+	int Service;
 	if (deps[i][0]=='#') continue;
-	service=loadservice(deps[i]);
-	if (service>=0 && root[service].pid!=1)
-	  startservice(service,0);
+	Service=loadservice(deps[i]);
+	if (Service>=0 && root[Service].pid!=1)
+	  startservice(Service,0,service);
       }
       fchdir(dir);
     }
@@ -389,17 +394,17 @@ int main(int argc, char *argv[]) {
    fl.l_len=0;
    fl.l_pid=0;
    if ( (0 == fcntl(infd,F_GETLK,&fl)) &&
-   		(fl.l_type != F_UNLCK )) doupdate=1; 
+   		(fl.l_type != F_UNLCK )) doupdate=1;
   }
-  
+
   if(!doupdate) {
 #endif
   for (i=1; i<argc; i++) {
     circsweep();
-    if (startservice(loadservice(argv[i]),0)) count++;
+    if (startservice(loadservice(argv[i]),0,-1)) count++;
    }
    circsweep();
-   if (!count) startservice(loadservice("default"),0);
+   if (!count) startservice(loadservice("default"),0,-1);
 #ifdef UPDATE
   }
 #endif
@@ -409,11 +414,11 @@ int main(int argc, char *argv[]) {
     time_t now;
     if (doint) {
       doint=0;
-      startservice(loadservice("ctrlaltdel"),0);
+      startservice(loadservice("ctrlaltdel"),0,-1);
     }
     if (dowinch) {
       dowinch=0;
-      startservice(loadservice("kbreq"),0);
+      startservice(loadservice("kbreq"),0,-1);
     }
     childhandler();
     now=time(0);
@@ -508,7 +513,7 @@ error:
 	    if (root[idx].pid<2) {
 	      root[idx].pid=0;
 	      circsweep();
-	      idx=startservice(idx,0);
+	      idx=startservice(idx,0,-1);
 	      if (idx==0) {
 		write(outfd,"0",1);
 		break;
@@ -519,6 +524,25 @@ ok:
 	    break;
 	  case 'u':
 	    write(outfd,buf,fmt_ulong(buf,time(0)-root[idx].startedat));
+	    break;
+	  case 'd':
+	    write(outfd,"1:",2);
+	    {
+	      int i;
+#if 0
+	      printf("looking for father==%d\n",idx);
+#endif
+	      for (i=0; i<=maxprocess; ++i) {
+#if 0
+		printf("pid of %d(%s) is %lu, father is %d\n",
+		       i,root[i].name?root[i].name:"[none]",root[i].pid,root[i].father);
+#endif
+		if (root[i].pid>1 && root[i].father==idx)
+		  write(outfd,root[i].name,str_len(root[i].name)+1);
+	      }
+	      write(outfd,"",1);
+	    }
+	    break;
 	  }
 	}
       }
