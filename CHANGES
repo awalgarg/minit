@@ -1,0 +1,10 @@
+0.4:
+  add pidfilehack.  It will take the first argument as filename for the
+  PID file (i.e. /var/run/sshd.pid), the second argument as service name
+  for minit (i.e. ssh) and the rest of the command line is run without
+  path searching in a child process.  The parent process will then
+  try to open the pidfile several times (for up to 30 seconds), read the
+  PID off it and run msvc to tell minit the PID of the service.  minit
+  can then track sshd and restart it if necessary.  This gross hack does
+  not work for daemons that do not write a PID file, but there are not
+  many of those, fortunately.

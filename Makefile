@@ -34,3 +34,6 @@ install:
 	install minit msvc pidfilehack /usr/sbin
 	test -d /etc/minit || mkdir /etc/minit
 	mkfifo -m 600 /etc/minit/in /etc/minit/out
+
+tar: clean
+	cd .. && tar cvvf minit.tar.bz2 minit --use=bzip2 --exclude CVS
