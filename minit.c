@@ -442,8 +442,7 @@ main(int argc, char *argv[]) {
 	strcat(buf," to ");
 #endif
 
-	if (root[j].pid>1)
-	  root[j].startedat-=diff;
+	root[j].startedat-=diff;
 
 #if 0
 	i=str_len(buf);

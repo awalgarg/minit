@@ -88,7 +88,7 @@ main(int argc,char *argv[]) {
   int len;
   if (argc<2) {
     buffer_putsflush(buffer_1,
-	"usage: msvc -[uodpchaitkoC] service\n"
+	"usage: msvc -[uodpchaitkogC] service\n"
 	"       msvc -Ppid service\n"
 	" -u\tup; start service with respawn\n"
 	" -o\tonce; start service without respawn\n"
@@ -100,6 +100,8 @@ main(int argc,char *argv[]) {
 	" -i\tintr; send SIGINT\n"
 	" -t\tterminate; send SIGTERM\n"
 	" -k\tkill; send SIGKILL\n"
+	" -g\tget; output just the PID\n"
+	" -Ppid\tset PID of service (for pidfilehack)\n"
 	" -C\tClear; remove service form active list\n\n");
     return 0;
   }
@@ -140,6 +142,19 @@ main(int argc,char *argv[]) {
       pid_t pid;
       if (argv[1][0]=='-') {
 	switch (argv[1][1]) {
+	case 'g':
+	  for (i=2; i<argc; ++i) {
+	    pid=__readpid(argv[i]);
+	    if (pid<2) {
+	      buffer_puts(buffer_2,"msvc: ");
+	      buffer_puts(buffer_2,argv[i]);
+	      buffer_putsflush(buffer_2,pid==1?": service terminated\n":": no such service\n");
+	      ret=1;
+	    }
+	    buffer_putulong(buffer_1,pid);
+	    buffer_putsflush(buffer_1,"\n");
+	  }
+	  break;
 	case 'p': sig=SIGSTOP; goto dokill; break;
 	case 'c': sig=SIGCONT; goto dokill; break;
 	case 'h': sig=SIGHUP; goto dokill; break;

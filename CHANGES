@@ -16,6 +16,7 @@
   minit now has a heuristic to detect time zone changes and still
     have msvc report the correct elapsed time since process start/end
     (don't look at the source code, it's ultra-kludgey)
+  add msvc -g (get PID for shell scripts)
 
 0.8:
   call waitpid repeatedly until it returns "no children".
