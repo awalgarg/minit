@@ -25,7 +25,7 @@
   make "msvc servicename" output easier to parse if not outputting to a tty
   require libowfat instead of shipping half of it ourselves
   replace malloc with alloca; minit is now 6644 bytes on i386.
-
+  add usage for serdo (Nikola Vladov)
 
 0.9.1:
   fix embarassing typo in msvc (Gelu G. Lupas)

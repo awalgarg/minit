@@ -147,6 +147,7 @@ int batch(char* s) {
 int main(int argc,char* argv[],char* env[]) {
   int r;
   (void)argc;
+  if (argc<2) die(1,"usage: serdo [-c] filename");
   errmsg_iam("serdo");
   for (envc=0; envc<MAXENV && env[envc]; ++envc) envp[envc]=env[envc];
   envp[envc]=0;
