@@ -45,6 +45,7 @@ int spawn(char** argv, int last) {
   } else i=0;
   if (!i) {
     /* child */
+    environ=envp;
     _exit(execvp(argv[0],argv));
   }
   if (waitpid(i,&i,0)==-1) diesys(1,"waitpid failed");
