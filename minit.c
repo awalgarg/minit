@@ -284,11 +284,11 @@ int startservice(int service,int pause) {
   if (chdir(MINITROOT) || chdir(root[service].name)) return -1;
   if ((dir=open(".",O_RDONLY))>=0) {
     if (!openreadclose("depends",&s,&len)) {
-      char **argv;
-      int argc,i;
-      argv=split(s,'\n',&argc,0,0);
-      for (i=0; i<argc; i++) {
-	int service=loadservice(argv[i]);
+      char **deps;
+      int depc,i;
+      deps=split(s,'\n',&depc,0,0);
+      for (i=0; i<depc; i++) {
+	int service=loadservice(deps[i]);
 	if (service>=0 && root[service].pid!=1)
 	  startservice(service,0);
       }
