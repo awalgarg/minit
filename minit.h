@@ -11,3 +11,7 @@ static struct process {
   int logservice;
 } *root;
 
+static int infd,outfd;
+static int maxprocess=-1;
+static int processalloc;
+

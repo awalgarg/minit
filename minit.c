@@ -28,21 +28,15 @@ extern void opendevconsole();
 
 #define UPDATE
 #ifdef UPDATE
-static int doupdate=0;
+static int doupdate;
 #endif
 
 static int i_am_init;
-
-static int infd,outfd;
 
 extern int openreadclose(char *fn, char **buf, unsigned long *len);
 extern char **split(char *buf,int c,int *len,int plus,int ofs);
 
 extern char **environ;
-
-static int maxprocess=-1;
-
-static int processalloc=0;
 
 /* return index of service in process data structure or -1 if not found */
 int findservice(char *service) {
@@ -111,6 +105,8 @@ int loadservice(char *service) {
     if (tmp.logservice>=0) {
       int pipefd[2];
       if (pipe(pipefd)) return -1;
+      fcntl(pipefd[0],F_SETFD,FD_CLOEXEC);
+      fcntl(pipefd[1],F_SETFD,FD_CLOEXEC);
       root[tmp.logservice].__stdin=pipefd[0];
       tmp.__stdout=pipefd[1];
     }
@@ -213,10 +209,15 @@ again:
       argv[0]++;
     else
       argv[0]=argv0;
-    if (root[service].__stdin != 0) dup2(root[service].__stdin,0);
+    if (root[service].__stdin != 0) {
+      dup2(root[service].__stdin,0);
+      fcntl(0,F_SETFD,0);
+    }
     if (root[service].__stdout != 1) {
       dup2(root[service].__stdout,1);
       dup2(root[service].__stdout,2);
+      fcntl(1,F_SETFD,0);
+      fcntl(2,F_SETFD,0);
     }
     {
       int i;
@@ -346,9 +347,6 @@ int main(int argc, char *argv[]) {
 
   infd=open("/etc/minit/in",O_RDWR);
   outfd=open("/etc/minit/out",O_RDWR|O_NONBLOCK);
-  
-  fcntl(infd,F_SETFD,FD_CLOEXEC);
-  fcntl(outfd,F_SETFD,FD_CLOEXEC);
 
   if (getpid()==1) {
     int fd;
@@ -380,10 +378,21 @@ int main(int argc, char *argv[]) {
     pfd.fd=infd;
  pfd.events=POLLIN;
 
+  fcntl(infd,F_SETFD,FD_CLOEXEC);
+  fcntl(outfd,F_SETFD,FD_CLOEXEC);
+
 #ifdef UPDATE
-  if( argc==2 && !strcmp(argv[1], "--update")) {
-    doupdate=1;
-  } else {
+  {
+   struct flock fl;
+   fl.l_whence=SEEK_CUR;
+   fl.l_start=0;
+   fl.l_len=0;
+   fl.l_pid=0;
+   if ( (0 == fcntl(infd,F_GETLK,&fl)) &&
+   		(fl.l_type != F_UNLCK )) doupdate=1; 
+  }
+  
+  if(!doupdate) {
 #endif
   for (i=1; i<argc; i++) {
     circsweep();
@@ -437,15 +446,13 @@ int main(int argc, char *argv[]) {
 
 /*	write(1,buf,str_len(buf)); write(1,"\n",1); */
 #ifdef UPDATE
-        if(!strcmp(buf,"update")) {
-          char *newargs[]={"/sbin/minit", "--update" ,0};
-          execve("/sbin/minit",newargs, environ);
-        }
-	idx=findservice(buf+1);
+       if(!strcmp(buf,"update")) {
+         execve("/sbin/minit",argv, environ);
+       }
 
-	if (((buf[0]!='U') && buf[0]!='s') && (idx<0))
+	if (((buf[0]!='U') && buf[0]!='s') && ((idx=findservice(buf+1))<0))
 #else
-	if (buf[0]!='s' && (idx<0))
+	if (buf[0]!='s' && ((idx=findservice(buf+1))<0))
 #endif
 error:
 	  write(outfd,"0",1);
@@ -466,7 +473,7 @@ error:
 	      struct process tmp;
 	      read(infd,&tmp,sizeof tmp);
 	      tmp.name=strdup(buf+1);
-	       addprocess(&tmp);
+	      addprocess(&tmp);
 	    }
 	    goto ok;
 #endif

@@ -1,4 +1,5 @@
-all: minit msvc pidfilehack hard-reboot write_proc killall5 shutdown
+all: minit msvc pidfilehack hard-reboot write_proc killall5 shutdown \
+minit-update
 
 #CFLAGS=-pipe -march=i386 -fomit-frame-pointer -Os -I../dietlibc/include
 DIET=diet
@@ -19,8 +20,7 @@ str_start.o
 
 minit-update: minit-update.o buffer_1.o buffer_2.o buffer_puts.o \
 buffer_putsflush.o buffer_put.o buffer_flush.o buffer_stubborn.o \
-buffer_putflush.o byte_copy.o split.o str_len.o openreadclose.o \
-str_len.o
+buffer_putflush.o byte_copy.o split.o str_len.o openreadclose.o
 	$(DIET) $(CROSS)$(CC) $(LDFLAGS) -o minit-update $^
 
 shutdown: shutdown.o split.o openreadclose.o opendevconsole.o
@@ -51,7 +51,7 @@ killall5: killall5.c
 install-files:
 	install -d $(DESTDIR)/etc/minit $(DESTDIR)/sbin $(DESTDIR)/bin
 	install minit pidfilehack $(DESTDIR)/sbin
-	install write_proc hard-reboot $(DESTDIR)/sbin
+	install write_proc hard-reboot minit-update $(DESTDIR)/sbin
 	install msvc $(DESTDIR)/bin
 	install -m 4750 shutdown $(DESTDIR)/sbin
 	test -f $(DESTDIR)/sbin/init || ln $(DESTDIR)/sbin/minit $(DESTDIR)/sbin/init
