@@ -3,6 +3,7 @@
 #include <signal.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include "str.h"
 #include "fmt.h"
 #include "buffer.h"
@@ -84,8 +85,7 @@ unsigned long uptime(char *service) {
   return atoi(buf);
 }
 
-main(int argc,char *argv[]) {
-  int len;
+int main(int argc,char *argv[]) {
   if (argc<2) {
     buffer_putsflush(buffer_1,
 	"usage: msvc -[uodpchaitkogC] service\n"
@@ -181,7 +181,7 @@ main(int argc,char *argv[]) {
 	      ret=1;
 	    } else if (pid==1)
 	      continue;
-	    if (respawn(argv[i],0) || kill(pid,SIGTERM) || kill(pid,SIGCONT));
+	    if (respawn(argv[i],0) || kill(pid,SIGTERM) || kill(pid,SIGCONT)) (void)0;
 	  }
 	  break;
 	case 'u':
@@ -230,7 +230,6 @@ dokill:
 	  buffer_puts(buffer_2," to PID ");
 	  buffer_putulong(buffer_2,pid);
 	  buffer_putsflush(buffer_2,"\n");
-error:
 	  ret=1;
 	}
       }

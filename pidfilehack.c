@@ -2,6 +2,7 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <sys/fcntl.h>
+#include <stdio.h>
 
 /* purpose: argv[1] is the full path to a PID file,
  *          argv+2 is the daemon to run.
@@ -34,7 +35,6 @@ int main(int argc, char* argv[]) {
   }
   do {
     int fd=open(argv[2],O_RDONLY);
-    pid_t p;
     if (fd>=0) {
       static char buf[100] = "-P";
       int len=read(fd,buf+2,100);

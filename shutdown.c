@@ -18,12 +18,14 @@
  * - cleanup
  */
 
+#include <sys/types.h>
 #include <sys/reboot.h>
 #include <signal.h>
 #include <fcntl.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/wait.h>
 
 #ifdef __dietlibc__
 #include <write12.h>
@@ -80,7 +82,7 @@ int minit_serviceDown(char *service) {
   unsigned long len;
   pid_t pid=0;
   
-  if (service < 0) return 0;
+  if (!service || !*service) return 0;
   if (chdir(MINITROOT) || chdir(service)) return -1;
   
   if (!openreadclose("depends", &s, &len)) {
@@ -114,10 +116,10 @@ int minit_serviceDown(char *service) {
     if (i == 0) __write2("\t\tdone\n");
     else __write2("\t\tfailed\n");
   }
+  return 0;
 }
 
 int minit_shutdown(int level) {
-  char* service;
   __write2("Shutting down minit services: \n");
   infd=open("/etc/minit/in", O_WRONLY);
   outfd=open("/etc/minit/out", O_RDONLY);
@@ -128,10 +130,7 @@ int minit_shutdown(int level) {
     }
   }
 
-  if (!level)
-    minit_serviceDown("reboot");
-  else
-    minit_serviceDown("halt");
+  return minit_serviceDown(level?"halt":"reboot");
 }
 #endif
 
@@ -146,7 +145,7 @@ void printUsage() {
       		"\t -t secs:   delay between SIGTERM and SIGKILL\n");
 }
 
-main(int argc, char *const argv[]) {
+int main(int argc, char *const argv[]) {
   int c;
   int cfg_downlevel=2;
   /* 0: reboot
@@ -257,4 +256,5 @@ main(int argc, char *const argv[]) {
   } else {
     reboot(RB_POWER_OFF);
   }
+  return 0;
 }

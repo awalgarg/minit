@@ -13,6 +13,9 @@
 #include <stdio.h>
 #include <linux/kd.h>
 #include <sys/ioctl.h>
+#include <stdlib.h>
+#include <alloca.h>
+#include <sys/reboot.h>
 #include "fmt.h"
 #include "str.h"
 
@@ -115,7 +118,7 @@ int loadservice(char *service) {
       tmp.__stdout=pipefd[1];
     }
   }
-  addprocess(&tmp);
+  return addprocess(&tmp);
 }
 
 /* usage: isup(findservice("sshd")).
@@ -124,6 +127,8 @@ int isup(int service) {
   if (service<0) return 0;
   return (root[service].pid!=0);
 }
+
+int startservice(int service,int pause);
 
 #undef debug
 void handlekilled(pid_t killed) {
@@ -189,7 +194,6 @@ again:
     /* child */
 
     if (i_am_init) {
-      int fd;
       ioctl(0, TIOCNOTTY, 0);
       setsid();
       opendevconsole();
@@ -252,12 +256,8 @@ again:
 
 /* start a service, return nonzero on error */
 int startnodep(int service,int pause) {
-  pid_t p;
   /* step 1: see if the process is already up */
   if (isup(service)) return 0;
-#if 0
-  printf("launching %s\n",root[service].name);
-#endif
   /* step 2: fork and exec service, put PID in data structure */
   if (chdir(MINITROOT) || chdir(root[service].name)) return -1;
   root[service].startedat=time(0);
@@ -266,16 +266,11 @@ int startnodep(int service,int pause) {
 }
 
 int startservice(int service,int pause) {
-  int dir=-1,fd;
+  int dir=-1;
   unsigned long len;
   char *s=0;
   pid_t pid;
   if (service<0) return 0;
-#if 0
-  write(1,"startservice ",13);
-  write(1,root[service].name,str_len(root[service].name));
-  write(1,"\n",1);
-#endif
   if (root[service].circular)
     return 0;
   root[service].circular=1;
@@ -350,11 +345,11 @@ void childhandler() {
 static volatile int dowinch=0;
 static volatile int doint=0;
 
-void sigchild(int whatever) { }
-void sigwinch(int sig) { dowinch=1; }
-void sigint(int sig) { doint=1; }
+void sigchild(int sig) { (void)sig; }
+void sigwinch(int sig) { (void)sig; dowinch=1; }
+void sigint(int sig) { (void)sig; doint=1; }
 
-main(int argc, char *argv[]) {
+int main(int argc, char *argv[]) {
   /* Schritt 1: argv[1] als Service nehmen und starten */
   int count=0;
   int i;
@@ -366,7 +361,6 @@ main(int argc, char *argv[]) {
   outfd=open("/etc/minit/out",O_RDWR|O_NONBLOCK);
   if (getpid()==1) {
     int fd;
-    pid_t p;
     i_am_init=1;
     reboot(0);
     if ((fd=open("/dev/console",O_RDWR|O_NOCTTY))) {
@@ -401,7 +395,6 @@ main(int argc, char *argv[]) {
   circsweep();
   if (!count) startservice(loadservice("default"),0);
   for (;;) {
-    int status;
     int i;
     char buf[1501];
     time_t now;
@@ -420,40 +413,8 @@ main(int argc, char *argv[]) {
       long diff=last-now;
       int j;
 
-#if 0
-      strcpy(buf,"minit: compensating for clock drift: ");
-      i=str_len(buf);
-      if (diff<0) { diff=-diff; buf[i]='-'; ++i; }
-      buf[i+fmt_ulong(buf+i,diff)]=0;
-      strcat(buf," sec.\r\n");
-      _puts(buf);
-      buf[fmt_ulong(buf,maxprocess)]=0;
-      strcat(buf," processes.\r\n");
-      _puts(buf);
-#endif
-
-      for (j=0; j<=maxprocess; ++j) {
-#if 0
-	strcpy(buf,"minit: setting ");
-	strcat(buf,root[j].name);
-	strcat(buf," from ");
-	i=str_len(buf);
-	buf[i+fmt_ulong(buf+i,root[j].startedat)]=0;
-	strcat(buf," to ");
-#endif
-
+      for (j=0; j<=maxprocess; ++j)
 	root[j].startedat-=diff;
-
-#if 0
-	i=str_len(buf);
-	buf[i+fmt_ulong(buf+i,root[j].startedat)]=0;
-	strcat(buf," [pid ");
-	i=str_len(buf);
-	buf[i+fmt_ulong(buf+i,root[j].pid)]=0;
-	strcat(buf,"].\r\n");
-	_puts(buf);
-#endif
-      }
     }
     last=now;
     switch (poll(&pfd,nfds,5000)) {

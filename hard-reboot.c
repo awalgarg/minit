@@ -1,5 +1,6 @@
 #include <unistd.h>
 #include <sys/reboot.h>
+#include <stdlib.h>
 
 #define ABORTMSG "hard-reboot: Aborted.\n"
 #define USAGE "Say \"hard-reboot (RESTART|HALT|POWER_OFF)\" if you really mean it.\n"

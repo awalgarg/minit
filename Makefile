@@ -1,9 +1,9 @@
 all: minit msvc pidfilehack hard-reboot write_proc killall5 shutdown
 
 #CFLAGS=-pipe -march=i386 -fomit-frame-pointer -Os -I../dietlibc/include
-DIET=diet
+DIET=/opt/diet/bin/diet
 CC=gcc
-CFLAGS=-pipe -fomit-frame-pointer -Os
+CFLAGS=-Wall -W -pipe -fomit-frame-pointer -Os
 CROSS=
 #CROSS=arm-linux-
 LDFLAGS=-s
