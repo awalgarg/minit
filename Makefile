@@ -1,4 +1,4 @@
-all: minit msvc pidfilehack hard-reboot
+all: minit msvc pidfilehack hard-reboot write_proc
 
 #CFLAGS=-pipe -march=i386 -fomit-frame-pointer -Os -I../dietlibc/include
 DIET=diet
@@ -31,8 +31,12 @@ pidfilehack: pidfilehack.c
 hard-reboot: hard-reboot.c
 	$(DIET) $(CROSS)$(CC) $(CFLAGS) -o $@ $^
 
+write_proc: write_proc.c
+	$(DIET) $(CROSS)$(CC) $(CFLAGS) -o $@ $^
+
 install-files:
 	install minit pidfilehack $(DESTDIR)/sbin
+	install write_proc hard-reboot $(DESTDIR)/sbin
 	install msvc $(DESTDIR)/bin
 	test -d $(DESTDIR)/etc/minit || mkdir $(DESTDIR)/etc/minit
 

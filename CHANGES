@@ -4,6 +4,7 @@
   add hard-reboot from Tommi Virtanen.  He also asked me to include an
     explicit license statement and sent a patch to make debian packaging
     easier (deb files can't include FIFOs).
+  Olaf: add write_proc.
 
 0.8:
   call waitpid repeatedly until it returns "no children".
