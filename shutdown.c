@@ -116,6 +116,7 @@ int minit_serviceDown(char *service) {
     if (i == 0) __write2("\t\tdone\n");
     else __write2("\t\tfailed\n");
   }
+  close(infd); close(outfd);
   return 0;
 }
 
@@ -127,7 +128,7 @@ int minit_shutdown(int level) {
     while (lockf(infd, F_LOCK, 1)) {
       __write2("could not acquire lock!\n");
       sleep(1);
-    }
+    }  
   }
 
   return minit_serviceDown(level?"halt":"reboot");
