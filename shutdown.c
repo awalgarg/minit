@@ -244,8 +244,10 @@ int main(int argc, char *const argv[]) {
   kill(-1, SIGKILL);
 
   if (cfg_sulogin) {
-    exec_cmd("/sbin/sulogin", "sulogin", (char *) 0);
-    return 0;
+    char* suargs[]={"sulogin",0};
+    execve("/sbin/sulogin", suargs, 0);
+    __write2("execve() /sbin/sulogin failed\n");
+    return 1;
   }
 
   /* sync buffers */
