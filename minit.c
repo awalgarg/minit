@@ -288,7 +288,9 @@ int startservice(int service,int pause) {
       int depc,i;
       deps=split(s,'\n',&depc,0,0);
       for (i=0; i<depc; i++) {
-	int service=loadservice(deps[i]);
+	int service;
+	if (deps[i][0]=='#') continue;
+	service=loadservice(deps[i]);
 	if (service>=0 && root[service].pid!=1)
 	  startservice(service,0);
       }
@@ -459,6 +461,13 @@ error:
 	  case 'R':
 	    root[idx].respawn=1;
 	    goto ok;
+	  case 'C':
+	    if (kill(root[idx].pid,0)) {	/* check if still active */
+	      handlekilled(root[idx].pid);	/* no!?! remove form active list */
+	      goto error;
+	    }
+	    goto ok;
+	    break;
 	  case 'P':
 	    {
 	      unsigned char *x=buf+str_len(buf)+1;
@@ -491,6 +500,7 @@ ok:
       }
       break;
     default:
+      break;
     }
   }
 }

@@ -5,6 +5,8 @@
     explicit license statement and sent a patch to make debian packaging
     easier (deb files can't include FIFOs).
   Olaf: add write_proc.
+  Olaf: lines in depends can now be commented out with a #
+  Olaf: add a method to clear dead services (mark as terminated)
 
 0.8:
   call waitpid repeatedly until it returns "no children".

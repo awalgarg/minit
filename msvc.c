@@ -46,6 +46,16 @@ int setpid(char *service, pid_t pid) {
 }
 
 /* return nonzero if error */
+int check_remove(char *service) {
+  int len;
+  buf[0]='C';
+  strncpy(buf+1,service,1400);
+  write(infd,buf,str_len(buf));
+  len=read(outfd,buf,1500);
+  return (len!=1 || buf[0]=='0');
+}
+
+/* return nonzero if error */
 int startservice(char *service) {
   int len;
   buf[0]='s';
@@ -71,18 +81,19 @@ main(int argc,char *argv[]) {
   int len;
   if (argc<2) {
     buffer_putsflush(buffer_1,
-         "usage: msvc -[uodpchaitko] service\n"
-	 "       msvc -Ppid service\n"
-	  " -u	up; start service with respawn\n"
-	  " -o	once; start service without respawn\n"
-	  " -d	down; disable respawn, stop service\n"
-	  " -p	pause; send SIGSTOP\n"
-	  " -c	continue; send SIGCONT\n"
-	  " -h	hangup; send SIGHUP\n"
-	  " -a	alarm; send SIGALRM\n"
-	  " -i	intr; send SIGINT\n"
-	  " -t	terminate; send SIGTERM\n"
-	  " -k	kill; send SIGKILL\n\n");
+	"usage: msvc -[uodpchaitkoC] service\n"
+	"       msvc -Ppid service\n"
+	" -u\tup; start service with respawn\n"
+	" -o\tonce; start service without respawn\n"
+	" -d\tdown; disable respawn, stop service\n"
+	" -p\tpause; send SIGSTOP\n"
+	" -c\tcontinue; send SIGCONT\n"
+	" -h\thangup; send SIGHUP\n"
+	" -a\talarm; send SIGALRM\n"
+	" -i\tintr; send SIGINT\n"
+	" -t\tterminate; send SIGTERM\n"
+	" -k\tkill; send SIGKILL\n"
+	" -C\tClear; remove service form active list\n\n");
     return 0;
   }
   infd=open("/etc/minit/in",O_WRONLY);
@@ -146,6 +157,14 @@ main(int argc,char *argv[]) {
 	    buffer_puts(buffer_2,"Could not start ");
 	    buffer_puts(buffer_2,argv[2]);
 	    buffer_putsflush(buffer_2,"\n");
+	    goto error;
+	  }
+	  break;
+	case 'C':
+	  if (check_remove(argv[2])) {
+	    buffer_puts(buffer_2,"Service ");
+	    buffer_puts(buffer_2,argv[2]);
+	    buffer_putsflush(buffer_2," had terminated or was killed\n");
 	    goto error;
 	  }
 	  break;
