@@ -21,6 +21,7 @@
 extern int printf(const char *format,...);
 
 static int i_am_init;
+static int infd,outfd;
 
 extern int openreadclose(char *fn, char **buf, unsigned long *len);
 extern char **split(char *buf,int c,int *len,int plus,int ofs);
@@ -192,10 +193,8 @@ again:
 /*      ioctl(0, TIOCSCTTY, 1); */
       tcsetpgrp(0, getpgrp());
     }
-    close(3);
-    close(4);
-    close(5);
-    close(6);
+    close(infd);
+    close(outfd);
     if (pause) {
       struct timespec req;
       req.tv_sec=0;
@@ -222,7 +221,14 @@ again:
     else
       argv[0]=argv0;
     if (root[service].__stdin != 0) dup2(root[service].__stdin,0);
-    if (root[service].__stdout != 1) dup2(root[service].__stdout,1);
+    if (root[service].__stdout != 1) {
+      dup2(root[service].__stdout,1);
+      dup2(root[service].__stdout,2);
+    }
+    {
+      int i;
+      for (i=3; i<1024; ++i) close(i);
+    }
     execve(argv0,argv,environ);
     _exit(0);
   abort:
@@ -342,13 +348,14 @@ main(int argc, char *argv[]) {
   /* Schritt 1: argv[1] als Service nehmen und starten */
   int count=0;
   int i;
-  int infd=open("/etc/minit/in",O_RDWR),outfd=open("/etc/minit/out",O_RDWR|O_NONBLOCK);
   struct pollfd pfd;
 /*  int s=bindsocket(); */
 /*  printf("%d %d\n",infd,outfd);
   exit(0); */
   int nfds=1;
 
+  infd=open("/etc/minit/in",O_RDWR);
+  outfd=open("/etc/minit/out",O_RDWR|O_NONBLOCK);
   if (getpid()==1) {
     int fd;
     pid_t p;
