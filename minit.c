@@ -465,12 +465,12 @@ error:
 	  case 'U':
 	    doupdate=1;
 	    write(outfd,"1",1);
-    	    if (1==poll(&pfd,nfds,5000)) {
-              struct process tmp;
-	      read(infd,&tmp,sizeof tmp);		
-	      tmp.name=strdup(buf+1); 
+	    if (1==poll(&pfd,nfds,5000)) {
+	      struct process tmp;
+	      read(infd,&tmp,sizeof tmp);
+	      tmp.name=strdup(buf+1);
 	       addprocess(&tmp);
-	    } 
+	    }
 	    goto ok;
 #endif
 	  case 'r':
