@@ -1,4 +1,4 @@
-all: minit msvc pidfilehack
+all: minit msvc pidfilehack hard-reboot
 
 #CFLAGS=-pipe -march=i386 -fomit-frame-pointer -Os -I../dietlibc/include
 DIET=diet
@@ -20,7 +20,7 @@ buffer_flush.o buffer_stubborn.o buffer_putflush.o str_len.o
 	$(DIET) $(CROSS)$(CC) $(CFLAGS) -c $^
 
 clean:
-	rm -f *.o minit msvc pidfilehack
+	rm -f *.o minit msvc pidfilehack hard-reboot
 
 test: test.c
 	gcc -nostdlib -o $@ $^ -I../dietlibc/include ../dietlibc/start.o ../dietlibc/dietlibc.a
@@ -28,11 +28,18 @@ test: test.c
 pidfilehack: pidfilehack.c
 	$(DIET) $(CROSS)$(CC) $(CFLAGS) -o $@ $^
 
-install:
-	install minit pidfilehack /usr/sbin
-	install msvc /bin
-	test -d /etc/minit || mkdir /etc/minit
-	-mkfifo -m 600 /etc/minit/in /etc/minit/out
+hard-reboot: hard-reboot.c
+	$(DIET) $(CROSS)$(CC) $(CFLAGS) -o $@ $^
+
+install-files:
+	install minit pidfilehack $(DESTDIR)/sbin
+	install msvc $(DESTDIR)/bin
+	test -d $(DESTDIR)/etc/minit || mkdir $(DESTDIR)/etc/minit
+
+install-fifos:
+	-mkfifo -m 600 $(DESTDIR)/etc/minit/in $(DESTDIR)/etc/minit/out
+
+install: install-files install-fifos
 
 VERSION=minit-$(shell head -1 CHANGES|sed 's/://')
 CURNAME=$(notdir $(shell pwd))
