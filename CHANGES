@@ -1,3 +1,7 @@
+0.5.1:
+  cut&paste error, set wrong variable to 0 for keyboard request.
+    Thanks, Schulti.
+
 0.5:
   add "log" subdirectory (see README).
   get rid of stdio and *printf and switch to routines from libowfat.

@@ -12,12 +12,15 @@
 #include <sys/wait.h>
 #include <stdio.h>
 #include <linux/kd.h>
+#include <sys/ioctl.h>
 #include "fmt.h"
 
 #define MINITROOT "/etc/minit"
 
 #undef printf
 extern int printf(const char *format,...);
+
+static int i_am_init;
 
 extern int openreadclose(char *fn, char **buf, unsigned long *len);
 extern char **split(char *buf,int c,int *len,int plus,int ofs);
@@ -139,6 +142,23 @@ again:
     goto again;
   case 0:
     /* child */
+
+    if (i_am_init) {
+      int fd;
+      ioctl(0, TIOCNOTTY, 0);
+      setsid();
+      if ((fd=open("/dev/console",O_RDWR|O_NOCTTY))>=0) {
+	dup2(fd,0);
+	dup2(fd,1);
+	dup2(fd,2);
+	ioctl(0, TIOCSCTTY, 1);
+	tcsetpgrp(0, getpgrp());
+      }
+    }
+    close(3);
+    close(4);
+    close(5);
+    close(6);
     if (pause) {
       struct timespec req;
       req.tv_sec=0;
@@ -310,6 +330,7 @@ main(int argc, char *argv[]) {
 
   if (getpid()==1) {
     int fd;
+    i_am_init=1;
     reboot(0);
     if ((fd=open("/dev/tty0",O_RDWR|O_NOCTTY))) {
       ioctl(fd, KDSIGACCEPT, SIGWINCH);
