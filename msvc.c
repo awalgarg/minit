@@ -112,8 +112,11 @@ void dumpdependencies(char* service) {
       if (!tmp[0] && last=='\n') break;
     }
     prev=i;
-    for (; i<j; ++i) if (!tmp[i]) tmp[i]='\n';
-    if (j>1 && tmp[j-1]=='\n' && tmp[j-2]=='\n') { done=1; --j; }
+    for (; i<j; ++i)
+      if (!tmp[i]) {
+	tmp[i]=done?0:'\n';
+	if (i<j && !tmp[i+1]) { done=1; --j; }
+      }
     if (first)
       write(1,tmp+2,j-2);
     else

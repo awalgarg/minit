@@ -455,9 +455,10 @@ int main(int argc, char *argv[]) {
          execve("/sbin/minit",argv, environ);
        }
 
-	if (((buf[0]!='U') && buf[0]!='s') && ((idx=findservice(buf+1))<0))
+	if (((buf[0]!='U') && buf[0]!='s') && ((idx=findservice(buf+1))<0)
+	    && strcmp(buf,"d-"))
 #else
-	if (buf[0]!='s' && ((idx=findservice(buf+1))<0))
+	if (buf[0]!='s' && ((idx=findservice(buf+1))<0) && strcmp(buf,"d-") )
 #endif
 error:
 	  write(outfd,"0",1);
@@ -529,15 +530,15 @@ ok:
 	    write(outfd,"1:",2);
 	    {
 	      int i;
-#if 0
+#if 1
 	      printf("looking for father==%d\n",idx);
 #endif
 	      for (i=0; i<=maxprocess; ++i) {
-#if 0
+#if 1
 		printf("pid of %d(%s) is %lu, father is %d\n",
 		       i,root[i].name?root[i].name:"[none]",root[i].pid,root[i].father);
 #endif
-		if (root[i].pid>1 && root[i].father==idx)
+		if (root[i].father==idx)
 		  write(outfd,root[i].name,str_len(root[i].name)+1);
 	      }
 	      write(outfd,"\0",2);

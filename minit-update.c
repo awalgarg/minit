@@ -210,6 +210,7 @@ int main(int argc, char **argv) {
  }
 
  write(infd,"update",6);
+ sleep(1);
 
  for (i=0; i<=maxprocess; i++) {
     if (verbose) {
