@@ -158,7 +158,7 @@ again:
       ioctl(0, TIOCNOTTY, 0);
       setsid();
       opendevconsole();
-      ioctl(0, TIOCSCTTY, 1);
+/*      ioctl(0, TIOCSCTTY, 1); */
       tcsetpgrp(0, getpgrp());
     }
     close(3);
@@ -274,14 +274,9 @@ void sulogin() {	/* exiting on an initialization failure is not a good idea for 
   exit(1);
 }
 
-void childhandler() {
-  int status,i;
-  pid_t killed;
 #undef debug
-#ifdef debug
-  write(2,"wait...",7);
-#endif
-  killed=waitpid(-1,&status,WNOHANG);
+void handlekilled(pid_t killed) {
+  int i;
 #ifdef debug
   {
     char buf[50];
@@ -309,6 +304,16 @@ void childhandler() {
     } else
       root[i].pid=1;
   }
+}
+
+void childhandler() {
+  int status;
+  pid_t killed;
+#ifdef debug
+  write(2,"wait...",7);
+#endif
+  killed=waitpid(-1,&status,WNOHANG);
+  handlekilled(killed);
 }
 
 static volatile int dowait=0;
@@ -340,11 +345,12 @@ main(int argc, char *argv[]) {
     sigset_t ss;
     i_am_init=1;
     reboot(0);
-    if ((fd=open("/dev/tty0",O_RDWR|O_NOCTTY))) {
+    if ((fd=open("/dev/console",O_RDWR|O_NOCTTY))) {
       ioctl(fd, KDSIGACCEPT, SIGWINCH);
       close(fd);
     } else
       ioctl(0, KDSIGACCEPT, SIGWINCH);
+#if 0
     switch (p=fork()) {
     case 0: /* child */
       for (fd=1; fd<NSIG; ++fd) signal(fd,SIG_DFL);
@@ -362,6 +368,7 @@ main(int argc, char *argv[]) {
     }
     kill(p,SIGKILL);
     while (waitpid(p,0,0) != p) ;
+#endif
   }
 /*  signal(SIGPWR,sighandler); don't know what to do about it */
 /*  signal(SIGHUP,sighandler); ??? */
@@ -460,6 +467,12 @@ ok:
       }
       break;
     default:
+    }
+    for (;;) {
+      int status;
+      pid_t killed=waitpid(-1,&status,WNOHANG);
+      if (killed==0) break;
+      handlekilled(killed);
     }
   }
 }
