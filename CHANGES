@@ -15,6 +15,8 @@
   add a way to ask minit for dependencies
   msvc -H will now dump the ten least recently spawned processes.
     This is useful to see which process is looping.
+  fix bug in msvc killing process group if readpid failed
+    (Erich Schubert)
 
 0.9.1:
   fix embarassing typo in msvc (Gelu G. Lupas)
