@@ -3,6 +3,7 @@
 #include <signal.h>
 #include <stdio.h>
 #include <string.h>
+#include "str.h"
 #include "fmt.h"
 #include "buffer.h"
 
@@ -10,13 +11,27 @@ static int infd,outfd;
 
 static char buf[1500];
 
+void addservice(char* service) {
+  char* x;
+  if (str_start(service,"/etc/minit/"))
+    service+=11;
+  x=service+str_len(service)-1;
+  while (x>service && *x=='/') { *x=0; --x; }
+  strncpy(buf+1,service,1400);
+  buf[1400]=0;
+}
+
+int addreadwrite(char* service) {
+  addservice(service);
+  write(infd,buf,str_len(buf));
+  return read(outfd,buf,1500);
+}
+
 /* return PID, 0 if error */
 pid_t __readpid(char *service) {
   int len;
   buf[0]='p';
-  strncpy(buf+1,service,1400);
-  write(infd,buf,str_len(buf));
-  len=read(outfd,buf,1500);
+  len=addreadwrite(service);
   if (len<0) return 0;
   buf[len]=0;
   return atoi(buf);
@@ -26,9 +41,7 @@ pid_t __readpid(char *service) {
 int respawn(char *service,int yesno) {
   int len;
   buf[0]=yesno?'R':'r';
-  strncpy(buf+1,service,1400);
-  write(infd,buf,str_len(buf));
-  len=read(outfd,buf,1500);
+  len=addreadwrite(service);
   return (len!=1 || buf[0]=='0');
 }
 
@@ -37,7 +50,7 @@ int setpid(char *service, pid_t pid) {
   char *tmp;
   int len;
   buf[0]='P';
-  strncpy(buf+1,service,1400);
+  addservice(service);
   tmp=buf+str_len(buf)+1;
   tmp[fmt_ulong(tmp,pid)]=0;
   write(infd,buf,str_len(buf)+str_len(tmp)+2);
@@ -49,9 +62,7 @@ int setpid(char *service, pid_t pid) {
 int check_remove(char *service) {
   int len;
   buf[0]='C';
-  strncpy(buf+1,service,1400);
-  write(infd,buf,str_len(buf));
-  len=read(outfd,buf,1500);
+  len=addreadwrite(service);
   return (len!=1 || buf[0]=='0');
 }
 
@@ -59,9 +70,7 @@ int check_remove(char *service) {
 int startservice(char *service) {
   int len;
   buf[0]='s';
-  strncpy(buf+1,service,1400);
-  write(infd,buf,str_len(buf));
-  len=read(outfd,buf,1500);
+  len=addreadwrite(service);
   return (len!=1 || buf[0]=='0');
 }
 
@@ -69,9 +78,7 @@ int startservice(char *service) {
 unsigned long uptime(char *service) {
   int len;
   buf[0]='u';
-  strncpy(buf+1,service,1400);
-  write(infd,buf,str_len(buf));
-  len=read(outfd,buf,1500);
+  len=addreadwrite(service);
   if (len<0) return 0;
   buf[len]=0;
   return atoi(buf);
@@ -120,6 +127,10 @@ main(int argc,char *argv[]) {
 	buffer_putulong(buffer_1,len);
 	buffer_putsflush(buffer_1," seconds\n");
 	if (pid==0) return 2; else if (pid==1) return 3; else return 0;
+      } else {
+	buffer_puts(buffer_2,"msvc: ");
+	buffer_puts(buffer_2,argv[1]);
+	buffer_putsflush(buffer_2,": no such service.\n");
       }
       goto error;
     } else {

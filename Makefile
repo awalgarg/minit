@@ -13,7 +13,8 @@ minit: minit.o split.o openreadclose.o fmt_ulong.o str_len.o
 
 msvc: msvc.o fmt_ulong.o buffer_1.o buffer_2.o buffer_puts.o \
 buffer_putsflush.o buffer_putulong.o buffer_put.o byte_copy.o \
-buffer_flush.o buffer_stubborn.o buffer_putflush.o str_len.o
+buffer_flush.o buffer_stubborn.o buffer_putflush.o str_len.o \
+str_start.o
 	$(DIET) $(CROSS)$(CC) $(LDFLAGS) -o msvc $^
 
 %.o: %.c
