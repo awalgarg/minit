@@ -1,0 +1,39 @@
+Each service gets its own directory under /etc/minit (change this in the
+source, it's a #define right at the start of minit.c).
+
+Each service directory can contain the following files/symlinks:
+
+  depends
+
+    a plain text file containing a service name per line.
+    Example: /etc/minit/sshd/depends could contain "network".
+    Each of these services will be started before this service is
+    started.  If you need to wait for static initializations to
+    complete, use the sync flag.
+
+  run
+
+    a symbolic link to the program name.  No hard link, because argv[0]
+    for the programs is created by extracting the part after the last
+    slash in the contents of the symbolic link.
+    Example: "/usr/bin/sshd" would be run with argv[0]="sshd".
+
+  params
+
+    a plain text file containing command line parameters for the
+    service, one parameter per line.  No shell expansion is done.  If
+    you need shell expansion, have run point to a shell script instead
+    of the real daemon.  Note: Have the shell script exec the daemon
+    instead of simply running it to save system ressources.
+
+  respawn
+
+    touch this file to make minit respawn the process when it dies.
+    This should be touched for getty and network servers.
+
+  sync
+
+    touch this file to make minit wait until the service ends.  sync is
+    mutually exclusive with respawn.  This is meant for static
+    initializations like "ifconfig".
+
