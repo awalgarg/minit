@@ -132,7 +132,7 @@ main(int argc,char *argv[]) {
 	buffer_puts(buffer_2,argv[1]);
 	buffer_putsflush(buffer_2,": no such service.\n");
       }
-      goto error;
+      return 1;
     } else {
       int i;
       int ret=0;
@@ -215,10 +215,10 @@ dokill:
 	  buffer_puts(buffer_2," to PID ");
 	  buffer_putulong(buffer_2,pid);
 	  buffer_putsflush(buffer_2,"\n");
+error:
 	  ret=1;
 	}
       }
-error:
       return ret;
     }
   } else {
