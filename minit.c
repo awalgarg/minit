@@ -19,31 +19,26 @@
 #include "fmt.h"
 #include "str.h"
 
-#define MINITROOT "/etc/minit"
+#include "minit.h"
 
 #undef printf
 extern int printf(const char *format,...);
 
 extern void opendevconsole();
 
+#define UPDATE
+#ifdef UPDATE
+static int doupdate=0;
+#endif
+
 static int i_am_init;
+
 static int infd,outfd;
 
 extern int openreadclose(char *fn, char **buf, unsigned long *len);
 extern char **split(char *buf,int c,int *len,int plus,int ofs);
 
 extern char **environ;
-
-static struct process {
-  char *name;
-/*  char **argv; */
-  pid_t pid;
-  char respawn;
-  char circular;
-  time_t startedat;
-  int __stdin,__stdout;
-  int logservice;
-} *root;
 
 static int maxprocess=-1;
 
@@ -192,8 +187,7 @@ again:
 /*      ioctl(0, TIOCSCTTY, 1); */
       tcsetpgrp(0, getpgrp());
     }
-    close(infd);
-    close(outfd);
+
     if (pause) {
       struct timespec req;
       req.tv_sec=0;
@@ -229,7 +223,7 @@ again:
       for (i=3; i<1024; ++i) close(i);
     }
     execve(argv0,argv,environ);
-    _exit(0);
+    _exit(1);	
   abort:
     free(argv0);
     free(argv);
@@ -305,8 +299,9 @@ int startservice(int service,int pause) {
 void sulogin() {	/* exiting on an initialization failure is not a good idea for init */
   char *argv[]={"sulogin",0};
   execve("/sbin/sulogin",argv,environ);
-  exit(1);
+  _exit(1);
 }
+
 
 static void _puts(const char* s) {
   write(1,s,str_len(s));
@@ -328,6 +323,10 @@ void childhandler() {
     return;
   }
 #endif
+#ifdef UPDATE
+if (doupdate) return;
+#endif
+
   do {
     killed=waitpid(-1,&status,WNOHANG);
     handlekilled(killed);
@@ -351,6 +350,10 @@ int main(int argc, char *argv[]) {
 
   infd=open("/etc/minit/in",O_RDWR);
   outfd=open("/etc/minit/out",O_RDWR|O_NONBLOCK);
+  
+  fcntl(infd,F_SETFD,FD_CLOEXEC);
+  fcntl(outfd,F_SETFD,FD_CLOEXEC);
+
   if (getpid()==1) {
     int fd;
     i_am_init=1;
@@ -372,20 +375,29 @@ int main(int argc, char *argv[]) {
     sa.sa_handler=sigint; sigaction(SIGINT,&sa,0);	/* ctrl-alt-del */
     sa.sa_handler=sigwinch; sigaction(SIGWINCH,&sa,0);	/* keyboard request */
   }
+  
   if (infd<0 || outfd<0) {
     _puts("minit: could not open /etc/minit/in or /etc/minit/out\n");
     sulogin();
     nfds=0;
   } else
     pfd.fd=infd;
-  pfd.events=POLLIN;
+ pfd.events=POLLIN;
 
+#ifdef UPDATE
+  if( argc==2 && !strcmp(argv[1], "--update")) {
+    doupdate=1;
+  } else {
+#endif
   for (i=1; i<argc; i++) {
     circsweep();
     if (startservice(loadservice(argv[i]),0)) count++;
+   }
+   circsweep();
+   if (!count) startservice(loadservice("default"),0);
+#ifdef UPDATE
   }
-  circsweep();
-  if (!count) startservice(loadservice("default"),0);
+#endif
   for (;;) {
     int i;
     char buf[1501];
@@ -428,7 +440,16 @@ int main(int argc, char *argv[]) {
 	buf[i]=0;
 
 /*	write(1,buf,str_len(buf)); write(1,"\n",1); */
+#ifdef UPDATE
+       if(!strcmp(buf,"update")) {
+         char *newargs[]={"/sbin/minit", "--update" ,0};
+         execve("/sbin/minit",newargs, environ);
+       }
+
+	if (((buf[0]!='U') && buf[0]!='s') && ((idx=findservice(buf+1))<0))
+#else
 	if (buf[0]!='s' && ((idx=findservice(buf+1))<0))
+#endif
 error:
 	  write(outfd,"0",1);
 	else {
@@ -436,6 +457,22 @@ error:
 	  case 'p':
 	    write(outfd,buf,fmt_ulong(buf,root[idx].pid));
 	    break;
+#ifdef UPDATE
+	  case 'D':
+	    doupdate=1;
+	    write(outfd, &root[idx], sizeof(struct process));
+	    break;
+	  case 'U':
+	    doupdate=1;
+	    write(outfd,"1",1);
+    	    if (1==poll(&pfd,nfds,5000)) {
+              struct process tmp;
+	      read(infd,&tmp,sizeof tmp);		
+	      tmp.name=strdup(buf+1); 
+	       addprocess(&tmp);
+	    } 
+	    goto ok;
+#endif
 	  case 'r':
 	    root[idx].respawn=0;
 	    goto ok;
@@ -448,7 +485,6 @@ error:
 	      goto error;
 	    }
 	    goto ok;
-	    break;
 	  case 'P':
 	    {
 	      unsigned char *x=buf+str_len(buf)+1;
@@ -484,6 +520,9 @@ ok:
       }
       break;
     default:
+#ifdef UPDATE
+      doupdate=0;
+#endif
       break;
     }
   }

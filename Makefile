@@ -1,7 +1,7 @@
 all: minit msvc pidfilehack hard-reboot write_proc killall5 shutdown
 
 #CFLAGS=-pipe -march=i386 -fomit-frame-pointer -Os -I../dietlibc/include
-DIET=/opt/diet/bin/diet
+DIET=diet
 CC=gcc
 CFLAGS=-Wall -W -pipe -fomit-frame-pointer -Os
 CROSS=
@@ -16,6 +16,11 @@ buffer_putsflush.o buffer_putulong.o buffer_put.o byte_copy.o \
 buffer_flush.o buffer_stubborn.o buffer_putflush.o str_len.o \
 str_start.o
 	$(DIET) $(CROSS)$(CC) $(LDFLAGS) -o msvc $^
+
+minit-update: minit-update.o buffer_1.o buffer_2.o buffer_puts.o \
+buffer_putsflush.o buffer_put.o buffer_flush.o buffer_stubborn.o buffer_putflush.o byte_copy.o \
+split.o str_len.o openreadclose.o
+	$(DIET) $(CROSS)$(CC) $(LDFLAGS) -o minit-update $^
 
 shutdown: shutdown.o split.o openreadclose.o opendevconsole.o
 	$(DIET) $(CROSS)$(CC) $(LDFLAGS) -o shutdown $^

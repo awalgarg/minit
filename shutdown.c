@@ -159,7 +159,7 @@ int main(int argc, char *const argv[]) {
    * 1: halt
    * 2: power off
    */
-  char *cfg_delay = "3";
+  unsigned int cfg_delay = 3;
   int cfg_minitonly = 0;
   int cfg_sulogin = 0;
 
@@ -195,7 +195,7 @@ int main(int argc, char *const argv[]) {
 	      cfg_downlevel = 2;
 	      break;
       case 't': /* delay between SIGTERM and SIGKILL */
-	      cfg_delay = optarg;
+	      cfg_delay = atoi(optarg);
 	      break;
       default:
 	      printUsage();
@@ -238,7 +238,7 @@ int main(int argc, char *const argv[]) {
   /* kill all processes still left */
   __write2("sending all processes the TERM signal...\n");
   kill(-1, SIGTERM);
-  sleep(atoi(cfg_delay));
+  sleep(cfg_delay);
 
   __write2("sending all processes the KILL signal...\n");
   kill(-1, SIGKILL);
