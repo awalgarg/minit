@@ -63,7 +63,7 @@ int exec_cmd(char *cmd, ...) {
   pid = fork();
   if (pid < 0) return -1;
   if (pid > 0) {
-    while (wait(NULL) != pid);
+    wait(NULL);
   } else {
     execve(cmd, argv, environ);
     //perror("execvp failed");
@@ -105,7 +105,7 @@ int minit_serviceDown(char *service) {
     pid = atoi(buf);
   }
 
-  if (strcmp("reboot",service) && strcmp("halt",service) && pid != 1) {
+  if (strcmp("reboot",service) && strcmp("halt",service) && pid > 1) {
     __write2("\t--> "); __write2(service);
     buf[0]='r'; // we want to disable respawning first
     strncpy(buf+1, service, 1400);
