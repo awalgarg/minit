@@ -21,7 +21,7 @@ shutdown: shutdown.o split.o openreadclose.o
 	$(DIET) $(CROSS)$(CC) $(LDFLAGS) -o shutdown $^
 
 %.o: %.c
-	$(DIET) $(CROSS)$(CC) $(CFLAGS) -c $^
+	$(DIET) $(CROSS)$(CC) $(CFLAGS) -c $<
 
 clean:
 	rm -f *.o minit msvc pidfilehack hard-reboot write_proc killall5 \
@@ -63,3 +63,26 @@ tar: clean rename
 rename:
 	if test $(CURNAME) != $(VERSION); then cd .. && mv $(CURNAME) $(VERSION); fi
 
+buffer_1.o: buffer_1.c buffer.h
+buffer_2.o: buffer_2.c buffer.h
+buffer_flush.o: buffer_flush.c buffer.h
+buffer_put.o: buffer_put.c byte.h buffer.h
+buffer_putflush.o: buffer_putflush.c buffer.h
+buffer_puts.o: buffer_puts.c str.h buffer.h
+buffer_putsflush.o: buffer_putsflush.c str.h buffer.h
+buffer_putulong.o: buffer_putulong.c buffer.h fmt.h
+buffer_stubborn.o: buffer_stubborn.c buffer.h
+byte_copy.o: byte_copy.c byte.h
+fmt_ulong.o: fmt_ulong.c fmt.h
+hard-reboot.o: hard-reboot.c
+killall5.o: killall5.c
+minit.o: minit.c fmt.h str.h
+msvc.o: msvc.c str.h fmt.h buffer.h
+openreadclose.o: openreadclose.c
+pidfilehack.o: pidfilehack.c
+shutdown.o: shutdown.c
+split.o: split.c
+str_len.o: str_len.c str.h
+str_start.o: str_start.c str.h
+t.o: t.c
+write_proc.o: write_proc.c
