@@ -61,7 +61,7 @@ install-fifos:
 
 install: install-files install-fifos
 
-VERSION=minit-$(shell head -1 CHANGES|sed 's/://')
+VERSION=minit-$(shell head -n 1 CHANGES|sed 's/://')
 CURNAME=$(notdir $(shell pwd))
 
 tar: clean rename
