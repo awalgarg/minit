@@ -344,7 +344,7 @@ main(int argc, char *argv[]) {
       startservice(loadservice("ctrlaltdel"),0);
     }
     if (dowinch) {
-      doint=0;
+      dowinch=0;
       startservice(loadservice("kbreq"),0);
     }
 /*    if (dowait) {
