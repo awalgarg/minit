@@ -20,7 +20,7 @@ unsigned int fmt_ulong(register char *s,register unsigned long u)
 }
 
 /* return PID, 0 if error */
-pid_t getpid(char *service) {
+pid_t __readpid(char *service) {
   int len;
   buf[0]='p';
   strncpy(buf+1,service,1400);
@@ -99,7 +99,7 @@ main(int argc,char *argv[]) {
       sleep(1);
     }
     if (argc==2) {
-      pid_t pid=getpid(argv[1]);
+      pid_t pid=__readpid(argv[1]);
       if (buf[0]!='0') {
 	unsigned long len;
 	write(1,argv[1],strlen(argv[1]));
@@ -134,7 +134,7 @@ main(int argc,char *argv[]) {
 	    fprintf(stderr,"Could not start %s\n",argv[2]);
 	  break;
 	case 'd': /* TODO: down */
-	  pid=getpid(argv[2]);
+	  pid=__readpid(argv[2]);
 	  if (pid==0) {
 	    puts("service not found");
 	    return 1;
@@ -156,7 +156,7 @@ main(int argc,char *argv[]) {
       return 0;
 dokill:
       for (i=2; i<=argc; i++) {
-	pid=getpid(argv[2]);
+	pid=__readpid(argv[2]);
 	if (kill(pid,sig)) {
 	  fprintf(stderr,"Could not send signal to PID %d\n",pid);
 	}
