@@ -1,3 +1,10 @@
+0.7:
+  found and fixed the bug that made the logging support not work when
+    minit was running as PID 1.
+  saw that the shutdown from sysvinit actually does what it's supposed
+    to do, even with minit, if one uses the -n mode.  It should be quite
+    easy to write a nice and clean shutdown for minit now.
+
 0.6.1:
   fixed msvc and minit handling of msvc -P.
   pidfilehack has now actually been tested and works with ssh.

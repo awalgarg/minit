@@ -398,9 +398,6 @@ main(int argc, char *argv[]) {
     pfd.fd=infd;
   pfd.events=POLLIN;
 
-  if (i_am_init) {
-    close(0); close(1); close(2);
-  }
   for (i=1; i<argc; i++) {
     circsweep();
     if (startservice(loadservice(argv[i]),0)) count++;
