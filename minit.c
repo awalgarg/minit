@@ -123,6 +123,38 @@ int isup(int service) {
   return (root[service].pid!=0);
 }
 
+#undef debug
+void handlekilled(pid_t killed) {
+  int i;
+#ifdef debug
+  {
+    char buf[50];
+    snprintf(buf,50," %d\n",killed);
+    write(2,buf,strlen(buf));
+  }
+#endif
+  if (killed == (pid_t)-1) {
+    write(2,"all services exited.\n",21);
+    exit(0);
+  }
+  if (killed==0) return;
+  i=findbypid(killed);
+#if 0
+  printf("%d exited, idx %d -> service %s\n",killed,i,i>=0?root[i].name:"[unknown]");
+#endif
+  if (i>=0) {
+    root[i].pid=0;
+    if (root[i].respawn) {
+#if 0
+      printf("restarting %s\n",root[i].name);
+#endif
+      circsweep();
+      startservice(i,time(0)-root[i].startedat<1);
+    } else
+      root[i].pid=1;
+  }
+}
+
 void opendevconsole() {
   int fd;
   if ((fd=open("/dev/console",O_RDWR|O_NOCTTY))>=0) {
@@ -134,7 +166,7 @@ void opendevconsole() {
 }
 
 /* called from inside the service directory, return the PID or 0 on error */
-pid_t forkandexec(int pause,int __stdin,int __stdout) {
+pid_t forkandexec(int pause,int service) {
   char **argv=0;
   int count=0;
   pid_t p;
@@ -143,10 +175,9 @@ pid_t forkandexec(int pause,int __stdin,int __stdout) {
   char *s=0;
   int argc;
   char *argv0=0;
-
 again:
   switch (p=fork()) {
-  case -1:
+  case (pid_t)-1:
     if (count>3) return 0;
     sleep(++count*2);
     goto again;
@@ -190,19 +221,21 @@ again:
       argv[0]++;
     else
       argv[0]=argv0;
-    if (__stdin != 0) dup2(__stdin,0);
-    if (__stdout != 1) dup2(__stdout,1);
+    if (root[service].__stdin != 0) dup2(root[service].__stdin,0);
+    if (root[service].__stdout != 1) dup2(root[service].__stdout,1);
     execve(argv0,argv,environ);
     _exit(0);
   abort:
     free(argv0);
     free(argv);
-    return 0;
+    _exit(0);
   default:
     fd=open("sync",O_RDONLY);
     if (fd>=0) {
+      pid_t p2;
       close(fd);
-      waitpid(p,0,0);
+      p2=waitpid(p,0,0);
+      return 1;
     }
     return p;
   }
@@ -219,7 +252,7 @@ int startnodep(int service,int pause) {
   /* step 2: fork and exec service, put PID in data structure */
   if (chdir(MINITROOT) || chdir(root[service].name)) return -1;
   root[service].startedat=time(0);
-  root[service].pid=forkandexec(pause,root[service].__stdin,root[service].__stdout);
+  root[service].pid=forkandexec(pause,service);
   return root[service].pid;
 }
 
@@ -274,36 +307,8 @@ void sulogin() {	/* exiting on an initialization failure is not a good idea for 
   exit(1);
 }
 
-#undef debug
-void handlekilled(pid_t killed) {
-  int i;
-#ifdef debug
-  {
-    char buf[50];
-    snprintf(buf,50," %d\n",killed);
-    write(2,buf,strlen(buf));
-  }
-#endif
-  if (killed == (pid_t)-1) {
-    write(2,"all services exited.\n",21);
-    exit(0);
-  }
-  if (killed==0) return;
-  i=findbypid(killed);
-#if 0
-  printf("%d exited, idx %d -> service %s\n",killed,i,i>=0?root[i].name:"[unknown]");
-#endif
-  if (i>=0) {
-    root[i].pid=0;
-    if (root[i].respawn) {
-#if 0
-      printf("restarting %s\n",root[i].name);
-#endif
-      circsweep();
-      startservice(i,time(0)-root[i].startedat<1);
-    } else
-      root[i].pid=1;
-  }
+static void _puts(const char* s) {
+  write(1,s,strlen(s));
 }
 
 void childhandler() {
@@ -312,21 +317,26 @@ void childhandler() {
 #ifdef debug
   write(2,"wait...",7);
 #endif
+#if 0
+  if (getpid()!=1) {
+    char buf[100];
+    _puts("childhandler() called from pid ");
+    buf[fmt_ulong(buf,getpid())]=0;
+    _puts(buf);
+    _puts("\n");
+    return;
+  }
+#endif
   killed=waitpid(-1,&status,WNOHANG);
   handlekilled(killed);
 }
 
-// static volatile int dowait=0;
 static volatile int dowinch=0;
 static volatile int doint=0;
 
-void sigchild(int whatever) { /* waitpid is done anyway */ }
+void sigchild(int whatever) { }
 void sigwinch(int sig) { dowinch=1; }
 void sigint(int sig) { doint=1; }
-
-static void _puts(const char* s) {
-  write(1,s,strlen(s));
-}
 
 main(int argc, char *argv[]) {
   /* Schritt 1: argv[1] als Service nehmen und starten */
@@ -375,6 +385,7 @@ main(int argc, char *argv[]) {
 #endif
   if (infd<0 || outfd<0) {
     _puts("minit: could not open /etc/minit/in or /etc/minit/out\n");
+    sulogin();
     nfds=0;
   } else
     pfd.fd=infd;
@@ -401,10 +412,7 @@ main(int argc, char *argv[]) {
       dowinch=0;
       startservice(loadservice("kbreq"),0);
     }
-/*    if (dowait) {
-      dowait=0; */
     childhandler();
-/*    } */
     switch (poll(&pfd,nfds,5000)) {
     case -1:
       if (errno==EINTR) {
@@ -466,13 +474,5 @@ ok:
       break;
     default:
     }
-#if 0
-    for (;;) {
-      int status;
-      pid_t killed=waitpid(-1,&status,WNOHANG);
-      if (killed==0) break;
-      handlekilled(killed);
-    }
-#endif
   }
 }

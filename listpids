@@ -1,0 +1,7 @@
+#!/bin/sh
+for i in `find /etc/minit -type d | grep -v /etc/minit$ | sed 's@/etc/minit/@@'`; do
+  msvc $i > /dev/null
+  if test $? = 0; then
+    echo $i
+  fi
+done
