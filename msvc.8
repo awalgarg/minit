@@ -81,6 +81,12 @@ because this services depended on them.  Please note that this is not
 done recursively (i.e. if default depends on qmail and qmail depends on
 log, this will print qmail, not qmail/log.  But msvc -D qmail will print
 qmail/log).
+.TP
+.B \-H
+Print history.
+This will print the names of the ten least recently spawned processes.
+This is useful if you see a process looping (initialization fails and
+minit is restarting it all the time).
 .SH "RETURN CODES"
 Generally, msvc return zero if everything is OK or 1 on error (could not
 open /etc/minit/in or /etc/minit/out or there is no process with the

@@ -87,6 +87,42 @@ unsigned long uptime(char *service) {
   return atoi(buf);
 }
 
+void dumphistory() {
+  char tmp[16384];
+  int i,j;
+  char first,last;
+  first=1; last='x';
+  write(infd,"h",1);
+  for (;;) {
+    int prev,done;
+    j=read(outfd,tmp,sizeof(tmp));
+    if (j<1) break;
+    done=i=0;
+    if (first) {
+      if (tmp[0]=='0') {
+	buffer_putsflush(buffer_2,"msvc: minit compiled without history support.\n");
+	return;
+      }
+      i+=2;
+    } else {
+      if (!tmp[0] && last=='\n') break;
+    }
+    prev=i;
+    for (; i<j; ++i)
+      if (!tmp[i]) {
+	tmp[i]=done?0:'\n';
+	if (i<j && !tmp[i+1]) { done=1; --j; }
+      }
+    if (first)
+      write(1,tmp+2,j-2);
+    else
+      write(1,tmp,j);
+    if (done) break;
+    last=tmp[j-1];
+    first=0;
+  }
+}
+
 void dumpdependencies(char* service) {
   char tmp[16384];
   int i,j;
@@ -145,6 +181,7 @@ int main(int argc,char *argv[]) {
 	" -g\tget; output just the PID\n"
 	" -Ppid\tset PID of service (for pidfilehack)\n"
 	" -D service\tprint services started as dependency\n"
+	" -H\tprint last n respawned services\n"
 	" -C\tClear; remove service form active list\n\n");
     return 0;
   }
@@ -155,7 +192,7 @@ int main(int argc,char *argv[]) {
       buffer_putsflush(buffer_2,"could not acquire lock!\n");
       sleep(1);
     }
-    if (argc==2) {
+    if (argc==2 && argv[1][1]!='H') {
       pid_t pid=__readpid(argv[1]);
       if (buf[0]!='0') {
 	unsigned long len;
@@ -253,6 +290,9 @@ int main(int argc,char *argv[]) {
 	      buffer_putsflush(buffer_2,"\n");
 	      ret=1;
 	    }
+	  break;
+	case 'H':
+	  dumphistory();
 	  break;
 	case 'D':
 	  dumpdependencies(argv[2]);

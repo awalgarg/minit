@@ -13,6 +13,8 @@
   Don't assume MINITROOT is 10 bytes long (Erich Schubert)
   add man pages!! (Erich Schubert)
   add a way to ask minit for dependencies
+  msvc -H will now dump the ten least recently spawned processes.
+    This is useful to see which process is looping.
 
 0.9.1:
   fix embarassing typo in msvc (Gelu G. Lupas)

@@ -38,6 +38,11 @@ extern char **split(char *buf,int c,int *len,int plus,int ofs);
 
 extern char **environ;
 
+#define HISTORY 10
+#ifdef HISTORY
+int history[HISTORY];
+#endif
+
 /* return index of service in process data structure or -1 if not found */
 int findservice(char *service) {
   int i;
@@ -262,6 +267,12 @@ int startservice(int service,int pause,int father) {
 	 service,root[service].name,father,father>=0?root[father].name:"[msvc]");
 #endif
   root[service].father=father;
+#ifdef HISTORY
+  {
+    memmove(history+1,history,sizeof(int)*((HISTORY)-1));
+    history[0]=service;
+  }
+#endif
   if (root[service].logservice>=0)
     startservice(root[service].logservice,pause,service);
   if (chdir(MINITROOT) || chdir(root[service].name)) return -1;
@@ -349,6 +360,11 @@ int main(int argc, char *argv[]) {
   struct pollfd pfd;
   time_t last=time(0);
   int nfds=1;
+
+#ifdef HISTORY
+  for (i=0; i<HISTORY; ++i)
+    history[i]=-1;
+#endif
 
   infd=open(MINITROOT "/in",O_RDWR);
   outfd=open(MINITROOT "/out",O_RDWR|O_NONBLOCK);
@@ -545,6 +561,21 @@ ok:
 	    }
 	    break;
 	  }
+	}
+      } else {
+	if (buf[0]=='h') {
+#ifdef HISTORY
+	  write(outfd,"1:",2);
+	  {
+	    int i;
+	    for (i=0; i<HISTORY; ++i)
+	      if (history[i]!=-1)
+		write(outfd,root[history[i]].name,str_len(root[history[i]].name)+1);
+	    write(outfd,"\0",2);
+	  }
+#else
+	  write(outfd,"0",1);
+#endif
 	}
       }
       break;
