@@ -4,6 +4,7 @@
   add killall5, needs /proc on Linux though (Florian Westphal)
   add shutdown
   add -Wall and -W and kill resulting compiler warnings
+  several fixes (Bernd Wachter)
 
 0.9.1:
   fix embarassing typo in msvc (Gelu G. Lupas)
