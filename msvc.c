@@ -109,7 +109,7 @@ main(int argc,char *argv[]) {
   outfd=open("/etc/minit/out",O_RDONLY);
   if (infd>=0) {
     while (lockf(infd,F_LOCK,1)) {
-      buffer_putsflush(buffer_2,"could not aquire lock!\n");
+      buffer_putsflush(buffer_2,"could not acquire lock!\n");
       sleep(1);
     }
     if (argc==2) {

@@ -15,20 +15,22 @@
  *
  * TODO: 
  * - add a function for wall-messages
- * - make sure that all drives are _really_ unmounted
  * - cleanup
  */
 
-#include <sys/types.h>
 #include <sys/reboot.h>
-#include <sys/stat.h>
 #include <signal.h>
-#include <stdarg.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <utmp.h>
 #include <fcntl.h>
+#include <stdarg.h>
 #include <stdio.h>
+#include <stdlib.h>
+
+#ifdef __dietlibc__
+#include <write12.h>
+#else
+static inline int __write1(const char*s) { return write(1,s,strlen(s)); }
+static inline int __write2(const char*s) { return write(2,s,strlen(s)); }
+#endif
 
 #define ALLOW_SUID
 #define USE_MINIT
@@ -38,31 +40,34 @@
 #endif
 
 extern char **environ;
-
 extern int openreadclose(char *fn, char **buf, unsigned long *len);
 extern char **split(char *buf,int c,int *len,int plus,int ofs);
 extern char *optarg;
 
-void sulogin() { 
-  char *argv[]={"sulogin",0};
-  execve("/sbin/sulogin",argv,environ);
-  exit(1);
-}
-
-void msg(char *buf) {
-  write(2,buf,strlen(buf));
-}
-
 void wall(char *buf) {
-  msg(buf);
+  __write2(buf);
 }
 
-void exec_umount() {
-  char *Argv[]={"umount","-a",0};
-  if (fork() == 0) {
-    execve("/bin/umount", Argv, environ);
-    perror("execve failed");
+int exec_cmd(char *cmd, ...) {
+  char *argv[10];
+  va_list arguments;
+  pid_t pid;
+  int i;
+
+  va_start(arguments, cmd);
+  for (i=0;i<9 && (argv[i] = va_arg(arguments, char *)) != NULL; i++);
+  argv[i] = NULL;
+  va_end(arguments);
+  pid = fork();
+  if (pid < 0) return -1;
+  if (pid > 0) {
+    while (wait(NULL) != pid);
+  } else {
+    execve(cmd, argv, environ);
+    //perror("execvp failed");
+    exit(0);
   }
+  return 0;
 }
 
 #ifdef USE_MINIT
@@ -99,26 +104,26 @@ int minit_serviceDown(char *service) {
   }
 
   if (strcmp("reboot",service) && strcmp("halt",service) && pid != 1) {
-    msg("\t--> "); msg(service);
+    __write2("\t--> "); __write2(service);
     buf[0]='r'; // we want to disable respawning first
     strncpy(buf+1, service, 1400);
     buf[1400]=0;
     write(infd, buf, strlen(buf));
     read(outfd, buf, 1500);
     int i=kill(pid, SIGTERM);
-    if (i == 0) msg("\t\tdone\n");
-    else msg("\t\tfailed\n");
+    if (i == 0) __write2("\t\tdone\n");
+    else __write2("\t\tfailed\n");
   }
 }
 
 int minit_shutdown(int level) {
   char* service;
-  msg("Shutting down minit services: \n");
+  __write2("Shutting down minit services: \n");
   infd=open("/etc/minit/in", O_WRONLY);
   outfd=open("/etc/minit/out", O_RDONLY);
   if (infd>=0) {
     while (lockf(infd, F_LOCK, 1)) {
-      msg("no lock");
+      __write2("could not acquire lock!\n");
       sleep(1);
     }
   }
@@ -131,7 +136,7 @@ int minit_shutdown(int level) {
 #endif
 
 void printUsage() {
-  msg("usage: shutdown -[rhosmn] -[t secs]\n"
+  __write2("usage: shutdown -[rhosmn] -[t secs]\n"
                 "\t -r:        reboot after shutdown\n"
                 "\t -h:        halt after shutdown\n"
 		"\t -o:	       power-off after shutdown\n"
@@ -141,15 +146,14 @@ void printUsage() {
       		"\t -t secs:   delay between SIGTERM and SIGKILL\n");
 }
 
-main(int argc, char **argv[]) {
-  int c,i;
+main(int argc, char *const argv[]) {
+  int c;
   int cfg_downlevel=2;
   /* 0: reboot
    * 1: halt
    * 2: power off
    */
   char *cfg_delay = "3";
-  int cfg_downat = 0;
   int cfg_minitonly = 0;
   int cfg_sulogin = 0;
 
@@ -157,7 +161,7 @@ main(int argc, char **argv[]) {
   setuid(geteuid());
   #endif
   if (getuid() != 0) {
-	  msg("you are not root, go away!\n");
+	  __write2("you are not root, go away!\n");
 	  return 1;
   }
 
@@ -224,23 +228,27 @@ main(int argc, char **argv[]) {
   #endif
   
   /* kill all processes still left */
-  msg("sending all processes the TERM signal...\n");
+  __write2("sending all processes the TERM signal...\n");
   kill(-1, SIGTERM);
   sleep(atoi(cfg_delay));
 
-  msg("sending all processes the KILL signal...\n");
+  __write2("sending all processes the KILL signal...\n");
   kill(-1, SIGKILL);
-  
+
   if (cfg_sulogin) {
-    sulogin();
+    exec_cmd("/sbin/sulogin", "sulogin", (char *) 0);
     return 0;
   }
 
   /* sync buffers */
   sync();
 
-  exec_umount();
-  
+  exec_cmd("/bin/swapoff", "swapoff", "-a", (char *) 0);
+  exec_cmd("/bin/umount", "umount", "-a", (char *) 0);
+  exec_cmd("/bin/mount", "mount", "-o", "remount,ro", "/", (char *) 0);
+
+  sync();
+
   /* and finally reboot, halt or power-off the system */ 
   if (cfg_downlevel == 0) {
     reboot(RB_AUTOBOOT);
