@@ -214,7 +214,7 @@ main(int argc,char *argv[]) {
       }
       return ret;
 dokill:
-      for (i=2; i<=argc; i++) {
+      for (i=2; i<argc; i++) {
 	pid=__readpid(argv[i]);
 	if (!pid) {
 	  buffer_puts(buffer_2,"msvc: ");

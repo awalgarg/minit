@@ -1,3 +1,6 @@
+0.9.1:
+  fix embarassing typo in msvc (Gelu G. Lupas)
+
 0.9:
   For stopped services, minit did not record the time when it finished,
     but when it was started.
