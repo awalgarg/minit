@@ -41,6 +41,8 @@ static inline int __write2(const char*s) { return write(2,s,strlen(s)); }
 #define MINITROOT "/etc/minit"
 #endif
 
+extern void opendevcolsone();
+
 extern char **environ;
 extern int openreadclose(char *fn, char **buf, unsigned long *len);
 extern char **split(char *buf,int c,int *len,int plus,int ofs);
@@ -106,13 +108,14 @@ int minit_serviceDown(char *service) {
   }
 
   if (strcmp("reboot",service) && strcmp("halt",service) && pid > 1) {
+    int i;
     __write2("\t--> "); __write2(service);
     buf[0]='r'; // we want to disable respawning first
     strncpy(buf+1, service, 1400);
     buf[1400]=0;
     write(infd, buf, strlen(buf));
     read(outfd, buf, 1500);
-    int i=kill(pid, SIGTERM);
+    i=kill(pid, SIGTERM);
     if (i == 0) __write2("\t\tdone\n");
     else __write2("\t\tfailed\n");
   }
@@ -199,6 +202,8 @@ int main(int argc, char *const argv[]) {
 	      return 1;
     }
   }
+  
+  opendevconsole();
   
   switch (cfg_downlevel) {
 	  case 0:

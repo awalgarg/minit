@@ -8,7 +8,7 @@ CROSS=
 #CROSS=arm-linux-
 LDFLAGS=-s
 
-minit: minit.o split.o openreadclose.o fmt_ulong.o str_len.o
+minit: minit.o split.o openreadclose.o fmt_ulong.o str_len.o opendevconsole.o
 	$(DIET) $(CROSS)$(CC) $(LDFLAGS) -o minit $^
 
 msvc: msvc.o fmt_ulong.o buffer_1.o buffer_2.o buffer_puts.o \
@@ -17,7 +17,7 @@ buffer_flush.o buffer_stubborn.o buffer_putflush.o str_len.o \
 str_start.o
 	$(DIET) $(CROSS)$(CC) $(LDFLAGS) -o msvc $^
 
-shutdown: shutdown.o split.o openreadclose.o
+shutdown: shutdown.o split.o openreadclose.o opendevconsole.o
 	$(DIET) $(CROSS)$(CC) $(LDFLAGS) -o shutdown $^
 
 %.o: %.c
@@ -86,3 +86,4 @@ str_len.o: str_len.c str.h
 str_start.o: str_start.c str.h
 t.o: t.c
 write_proc.o: write_proc.c
+opendevconsole.o: opendevconsole.c

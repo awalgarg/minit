@@ -24,6 +24,8 @@
 #undef printf
 extern int printf(const char *format,...);
 
+extern void opendevconsole();
+
 static int i_am_init;
 static int infd,outfd;
 
@@ -161,16 +163,6 @@ void handlekilled(pid_t killed) {
       root[i].startedat=time(0);
       root[i].pid=1;
     }
-  }
-}
-
-void opendevconsole() {
-  int fd;
-  if ((fd=open("/dev/console",O_RDWR|O_NOCTTY))>=0) {
-    dup2(fd,0);
-    dup2(fd,1);
-    dup2(fd,2);
-    if (fd>2) close(fd);
   }
 }
 
