@@ -11,6 +11,8 @@
 char* envp[MAXENV+2];
 int envc;
 
+int continueonerror;
+
 int envset(char* s) {
   int i,l;
   if (s[l=str_chr(s,'=')]!='=') return -1;
@@ -121,6 +123,8 @@ int execute(char* s) {
     } else
       last=1;
     r=run(start,last);
+    if (r!=0 && !continueonerror)
+      break;
   }
   return r;
 }
@@ -146,8 +150,13 @@ int main(int argc,char* argv[],char* env[]) {
   errmsg_iam("serdo");
   for (envc=0; envc<MAXENV && env[envc]; ++envc) envp[envc]=env[envc];
   envp[envc]=0;
-  while (*++argv)
+  if (str_equal(argv[1],"-c")) {
+    continueonerror=1;
+    ++argv;
+  }
+  while (*++argv) {
     if ((r=batch(*argv)))
       return r;
+  }
   return 0;
 }
