@@ -380,7 +380,8 @@ main(int argc, char *argv[]) {
   {
     struct sigaction sa;
     sigemptyset(&sa.sa_mask);
-    sa.sa_flags=SA_RESTART;
+    sa.sa_sigaction=0;
+    sa.sa_flags=SA_RESTART | SA_NOCLDSTOP;
     sa.sa_handler=sigchild; sigaction(SIGCHLD,&sa,0);
     sa.sa_handler=sigint; sigaction(SIGINT,&sa,0);	/* ctrl-alt-del */
     sa.sa_handler=sigwinch; sigaction(SIGWINCH,&sa,0);	/* keyboard request */
