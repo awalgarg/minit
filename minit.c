@@ -316,11 +316,11 @@ void childhandler() {
   handlekilled(killed);
 }
 
-static volatile int dowait=0;
+// static volatile int dowait=0;
 static volatile int dowinch=0;
 static volatile int doint=0;
 
-void sigchild(int whatever) { dowait=1; }
+void sigchild(int whatever) { /* waitpid is done anyway */ }
 void sigwinch(int sig) { dowinch=1; }
 void sigint(int sig) { doint=1; }
 
@@ -403,7 +403,7 @@ main(int argc, char *argv[]) {
     }
 /*    if (dowait) {
       dowait=0; */
-      childhandler();
+    childhandler();
 /*    } */
     switch (poll(&pfd,nfds,5000)) {
     case -1:
@@ -466,11 +466,13 @@ ok:
       break;
     default:
     }
+#if 0
     for (;;) {
       int status;
       pid_t killed=waitpid(-1,&status,WNOHANG);
       if (killed==0) break;
       handlekilled(killed);
     }
+#endif
   }
 }
