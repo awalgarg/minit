@@ -141,8 +141,9 @@ void handlekilled(pid_t killed) {
   }
 #endif
   if (killed == (pid_t)-1) {
-    write(2,"all services exited.\n",21);
-    exit(0);
+    static int saidso;
+    if (!saidso) { write(2,"all services exited.\n",21); saidso=1; }
+    if (i_am_init) exit(0);
   }
   if (killed==0) return;
   i=findbypid(killed);
