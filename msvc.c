@@ -308,8 +308,7 @@ dokill:
 	  buffer_puts(buffer_2,argv[i]);
 	  buffer_putsflush(buffer_2,": no such service!\n");
 	  ret=1;
-	}
-	if (kill(pid,sig)) {
+	} else if (kill(pid,sig)) {
 	  buffer_puts(buffer_2,"msvc: ");
 	  buffer_puts(buffer_2,argv[i]);
 	  buffer_puts(buffer_2,": could not send signal ");
