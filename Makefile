@@ -1,7 +1,9 @@
 all: minit msvc pidfilehack
 
-CFLAGS=-pipe -march=i386 -fomit-frame-pointer -Os -I../dietlibc/include
-#LDFLAGS=../dietlibc/start.o ../dietlibc/dietlibc.a
+#CFLAGS=-pipe -march=i386 -fomit-frame-pointer -Os -I../dietlibc/include
+CFLAGS=-pipe -fomit-frame-pointer -Os -I../dietlibc/include
+CROSS=arm-linux-
+LDFLAGS=../dietlibc/start.o ../dietlibc/dietlibc.a -lgcc-sf
 
 minit: minit.o split.o openreadclose.o
 	gcc -g $(LDFLAGS) -o minit $^
@@ -13,9 +15,9 @@ msvc: msvc.o
 	gcc $(CFLAGS) -c $^
 
 diet: minit.c split.o openreadclose.o
-	gcc -nostdlib -o minit -pipe -Os -m386 -I../dietlibc/include minit.c split.c openreadclose.c ../dietlibc/start.o ../dietlibc/dietlibc.a
-	gcc -nostdlib -o msvc -pipe -Os -m386 -I../dietlibc/include msvc.c ../dietlibc/start.o ../dietlibc/dietlibc.a
-	gcc -nostdlib -o pidfilehack -pipe -Os -m386 -I../dietlibc/include pidfilehack.c ../dietlibc/start.o ../dietlibc/dietlibc.a
+	$(CROSS)gcc -nostdlib -o minit $(CFLAGS) minit.c split.c openreadclose.c $(LDFLAGS)
+	$(CROSS)gcc -nostdlib -o msvc $(CFLAGS) msvc.c $(LDFLAGS)
+	$(CROSS)gcc -nostdlib -o pidfilehack $(CFLAGS) pidfilehack.c $(LDFLAGS)
 	strip -R .note -R .comment minit msvc pidfilehack
 
 diet2: minit.c split.o openreadclose.o

@@ -2,6 +2,7 @@
 #include <sys/file.h>
 #include <signal.h>
 #include <stdio.h>
+#include <string.h>
 
 static int infd,outfd;
 
@@ -46,7 +47,8 @@ int setpid(char *service, pid_t pid) {
   char *tmp;
   int len;
   buf[0]='P';
-  tmp=buf+1+strncpy(buf+1,service,1400);
+  strncpy(buf+1,service,1400);
+  tmp+=strlen(buf);
   tmp[fmt_ulong(tmp,pid)]=0;
   write(infd,buf,strlen(buf));
   len=read(outfd,buf,1500);
