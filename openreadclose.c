@@ -1,7 +1,6 @@
 #ifndef EMBEDDED
 #include <unistd.h>
-#include <sys/fcntl.h>
-#include <stdlib.h>
+#include <fcntl.h>
 #endif
 
 int openreadclose(char *fn, char **buf, unsigned long *len) {

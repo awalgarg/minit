@@ -1,4 +1,4 @@
-#include <sys/fcntl.h>
+#include <fcntl.h>
 #include <sys/file.h>
 #include <signal.h>
 #include <stdio.h>

@@ -1,7 +1,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <stdlib.h>
-#include <sys/fcntl.h>
+#include <fcntl.h>
 #include <stdio.h>
 
 /* purpose: argv[1] is the full path to a PID file,
