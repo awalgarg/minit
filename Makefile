@@ -8,6 +8,7 @@ CFLAGS=-Wall -W -pipe -fomit-frame-pointer -Os
 CROSS=
 #CROSS=arm-linux-
 LDFLAGS=-s
+MANDIR=/usr/man
 
 minit: minit.o split.o openreadclose.o fmt_ulong.o str_len.o opendevconsole.o
 	$(DIET) $(CROSS)$(CC) $(LDFLAGS) -o minit $^
@@ -49,12 +50,13 @@ killall5: killall5.c
 	$(DIET) $(CROSS)$(CC) $(CFLAGS) -o $@ $^
 
 install-files:
-	install -d $(DESTDIR)/etc/minit $(DESTDIR)/sbin $(DESTDIR)/bin
+	install -d $(DESTDIR)/etc/minit $(DESTDIR)/sbin $(DESTDIR)/bin $(DESTDIR)$(MANDIR)/man8
 	install minit pidfilehack $(DESTDIR)/sbin
 	install write_proc hard-reboot minit-update $(DESTDIR)/sbin
 	install msvc $(DESTDIR)/bin
 	install -m 4750 shutdown $(DESTDIR)/sbin
 	test -f $(DESTDIR)/sbin/init || ln $(DESTDIR)/sbin/minit $(DESTDIR)/sbin/init
+	install -m 644 hard-reboot.8 minit-list.8 minit-shutdown.8 minit-update.8 minit.8 msvc.8 pidfilehack.8 $(DESTDIR)$(MANDIR)/man8
 
 install-fifos:
 	-mkfifo -m 600 $(DESTDIR)/etc/minit/in $(DESTDIR)/etc/minit/out
