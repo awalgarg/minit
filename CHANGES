@@ -2,7 +2,7 @@
   add sample script for /etc/minit/ctrlaltdel/run as
     control/ctrlaltdel-run (Florian Westphal)
   add killall5, needs /proc on Linux though (Florian Westphal)
-  add shutdown
+  add shutdown (Bernd Wachter)
   add -Wall and -W and kill resulting compiler warnings
   several fixes (Bernd Wachter)
   add update support - tell minit to execve something else, a newer
@@ -10,6 +10,7 @@
   also add minit-update program to download state from old minit and
     upload state to new minit after update (Florian Westphal)
   #include minit.h and use MINITROOT consistently (Lordy)
+  Don't assume MINITROOT is 10 bytes long (Erich Schubert)
 
 0.9.1:
   fix embarassing typo in msvc (Gelu G. Lupas)

@@ -17,7 +17,7 @@ static char buf[1500];
 void addservice(char* service) {
   char* x;
   if (str_start(service,MINITROOT "/"))
-    service+=11;
+    service+=sizeof(MINITROOT "/") -1;
   x=service+str_len(service)-1;
   while (x>service && *x=='/') { *x=0; --x; }
   strncpy(buf+1,service,1400);
