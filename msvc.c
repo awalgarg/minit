@@ -4,11 +4,14 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include "str.h"
 #include "fmt.h"
 #include "buffer.h"
 #define NOVARS
 #include "minit.h"
+#include <errmsg.h>
+#include <errno.h>
 
 static int infd,outfd;
 
@@ -100,7 +103,7 @@ void dumphistory() {
     done=i=0;
     if (first) {
       if (tmp[0]=='0') {
-	buffer_putsflush(buffer_2,"msvc: minit compiled without history support.\n");
+	carp("minit compiled without history support.");
 	return;
       }
       i+=2;
@@ -138,9 +141,7 @@ void dumpdependencies(char* service) {
     done=i=0;
     if (first) {
       if (tmp[0]=='0') {
-	buffer_puts(buffer_2,"msvc: ");
-	buffer_puts(buffer_2,service);
-	buffer_putsflush(buffer_2,": no such service.\n");
+	carp(service,": no such service.");
 	return;
       }
       i+=2;
@@ -165,7 +166,7 @@ void dumpdependencies(char* service) {
 
 int main(int argc,char *argv[]) {
   if (argc<2) {
-    buffer_putsflush(buffer_1,
+    msg(
 	"usage: msvc -[uodpchaitkogC] service\n"
 	"       msvc -Ppid service\n"
 	" -u\tup; start service with respawn\n"
@@ -182,38 +183,49 @@ int main(int argc,char *argv[]) {
 	" -Ppid\tset PID of service (for pidfilehack)\n"
 	" -D service\tprint services started as dependency\n"
 	" -H\tprint last n respawned services\n"
-	" -C\tClear; remove service form active list\n\n");
+	" -C\tClear; remove service form active list\n");
     return 0;
   }
+  errmsg_iam("msvc");
   infd=open(MINITROOT "/in",O_WRONLY);
   outfd=open(MINITROOT "/out",O_RDONLY);
   if (infd>=0) {
     while (lockf(infd,F_LOCK,1)) {
-      buffer_putsflush(buffer_2,"could not acquire lock!\n");
+      carp("could not acquire lock!");
       sleep(1);
     }
     if (argc==2 && argv[1][1]!='H') {
       pid_t pid=__readpid(argv[1]);
       if (buf[0]!='0') {
 	unsigned long len;
-	buffer_puts(buffer_1,argv[1]);
-	buffer_puts(buffer_1,": ");
-	if (pid==0) buffer_puts(buffer_1,"down ");
-	else if (pid==1) buffer_puts(buffer_1,"finished ");
-	else {
-	  buffer_puts(buffer_1,"up (pid ");
-	  buffer_putulong(buffer_1,pid);
-	  buffer_puts(buffer_1,") ");
+	unsigned long ut=uptime(argv[1]);
+
+	if (isatty(1)) {
+	  char tmp[FMT_ULONG+20];
+	  char tmp2[FMT_ULONG];
+	  char* what;
+
+	  if (pid==0) what="down "; else
+	  if (pid==1) what="finished "; else {
+	    len=fmt_str(tmp,"up (pid ");
+	    len+=fmt_ulong(tmp+len,pid);
+	    tmp[len+fmt_str(tmp+len,") ")]=0;
+	    what=tmp;
+	  }
+	  tmp2[fmt_ulong(tmp2,ut)]=0;
+	  msg(argv[1],": ",what,tmp2," seconds");
+	} else {
+	  char tmp[FMT_ULONG*2+5];
+	  len=fmt_ulong(tmp,pid);
+	  tmp[len]=' '; ++len;
+	  len+=fmt_ulong(tmp+len,ut);
+	  tmp[len]='\n';
+	  write(1,tmp,len+1);
 	}
-	len=uptime(argv[1]);
-	buffer_putulong(buffer_1,len);
-	buffer_putsflush(buffer_1," seconds\n");
+
 	if (pid==0) return 2; else if (pid==1) return 3; else return 0;
-      } else {
-	buffer_puts(buffer_2,"msvc: ");
-	buffer_puts(buffer_2,argv[1]);
-	buffer_putsflush(buffer_2,": no such service.\n");
-      }
+      } else
+	carp(argv[1],": no such service.");
       return 1;
     } else {
       int i;
@@ -226,13 +238,14 @@ int main(int argc,char *argv[]) {
 	  for (i=2; i<argc; ++i) {
 	    pid=__readpid(argv[i]);
 	    if (pid<2) {
-	      buffer_puts(buffer_2,"msvc: ");
-	      buffer_puts(buffer_2,argv[i]);
-	      buffer_putsflush(buffer_2,pid==1?": service terminated\n":": no such service\n");
+	      carp(argv[i],pid==1?": service terminated":": no such service");
 	      ret=1;
+	    } else {
+	      char tmp[FMT_ULONG];
+	      int i;
+	      tmp[i=fmt_ulong(tmp,pid)]='\n';
+	      write(1,tmp,i+1);
 	    }
-	    buffer_putulong(buffer_1,pid);
-	    buffer_putsflush(buffer_1,"\n");
 	  }
 	  break;
 	case 'p': sig=SIGSTOP; goto dokill; break;
@@ -245,9 +258,7 @@ int main(int argc,char *argv[]) {
 	case 'o':
 	  for (i=2; i<argc; ++i)
 	    if (startservice(argv[i]) || respawn(argv[i],0)) {
-	      buffer_puts(buffer_2,"Could not start ");
-	      buffer_puts(buffer_2,argv[i]);
-	      buffer_putsflush(buffer_2,"\n");
+	      carp("Could not start ",argv[i]);
 	      ret=1;
 	    }
 	  break;
@@ -255,9 +266,7 @@ int main(int argc,char *argv[]) {
 	  for (i=2; i<argc; ++i) {
 	    pid=__readpid(argv[i]);
 	    if (pid==0) {
-	      buffer_puts(buffer_2,"msvc: ");
-	      buffer_puts(buffer_2,argv[i]);
-	      buffer_putsflush(buffer_2,": no such service\n");
+	      carp(argv[i],": no such service");
 	      ret=1;
 	    } else if (pid==1)
 	      continue;
@@ -268,17 +277,14 @@ int main(int argc,char *argv[]) {
 	case 'u':
 	  for (i=2; i<argc; ++i)
 	    if (startservice(argv[i]) || respawn(argv[i],1)) {
-	      buffer_puts(buffer_2,"Could not start ");
-	      buffer_puts(buffer_2,argv[i]);
-	      buffer_putsflush(buffer_2,"\n");
+	      carp("Could not start ",argv[i]);
 	      ret=1;
 	    }
 	  break;
 	case 'C':
 	  for (i=2; i<argc; ++i)
 	    if (check_remove(argv[i])) {
-	      buffer_puts(buffer_2,argv[i]);
-	      buffer_putsflush(buffer_2," had terminated or was killed\n");
+	      carp(argv[i]," could not be cleared");
 	      ret=1;
 	    }
 	  break;
@@ -286,9 +292,7 @@ int main(int argc,char *argv[]) {
 	  pid=atoi(argv[1]+2);
 	  if (pid>1)
 	    if (setpid(argv[2],pid)) {
-	      buffer_puts(buffer_2,"Could not set pid of service ");
-	      buffer_puts(buffer_2,argv[2]);
-	      buffer_putsflush(buffer_2,"\n");
+	      carp("Could not set PID of service ",argv[2]);
 	      ret=1;
 	    }
 	  break;
@@ -305,25 +309,28 @@ dokill:
       for (i=2; i<argc; i++) {
 	pid=__readpid(argv[i]);
 	if (!pid) {
-	  buffer_puts(buffer_2,"msvc: ");
-	  buffer_puts(buffer_2,argv[i]);
-	  buffer_putsflush(buffer_2,": no such service!\n");
+	  carp(argv[i],": no such service");
 	  ret=1;
 	} else if (kill(pid,sig)) {
-	  buffer_puts(buffer_2,"msvc: ");
-	  buffer_puts(buffer_2,argv[i]);
-	  buffer_puts(buffer_2,": could not send signal ");
-	  buffer_putulong(buffer_2,sig);
-	  buffer_puts(buffer_2," to PID ");
-	  buffer_putulong(buffer_2,pid);
-	  buffer_putsflush(buffer_2,"\n");
+	  char tmp[FMT_ULONG];
+	  char tmp2[FMT_ULONG];
+	  char* s;
+	  switch (errno) {
+	    case EINVAL: s="invalid signal"; break;
+	    case EPERM: s="permission denied"; break;
+	    case ESRCH: s="no such pid"; break;
+	    default: s="unknown error";
+	  }
+	  tmp[fmt_ulong(tmp,sig)]=0;
+	  tmp2[fmt_ulong(tmp2,pid)]=0;
+	  carp(argv[i],": could not send signal ",tmp," to PID ",pid,": ",s);
 	  ret=1;
 	}
       }
       return ret;
     }
   } else {
-    buffer_putsflush(buffer_2,"minit: could not open " MINITROOT "/in or " MINITROOT "/out\n");
+    carp("minit: could not open " MINITROOT "/in or " MINITROOT "/out");
     return 1;
   }
 }

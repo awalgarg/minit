@@ -21,6 +21,9 @@
     the kernel command line.  The first time they are to be started will
     then be skipped.  Use this, for example, to not start the dhcp
     client when your notebook is not plugged in a network.
+  add serdo (execute batch, no shell features whatsoever)
+  make "msvc servicename" output easier to parse if not outputting to a tty
+  require libowfat instead of shipping half of it ourselves
 
 0.9.1:
   fix embarassing typo in msvc (Gelu G. Lupas)

@@ -1,8 +1,7 @@
 all: minit msvc pidfilehack hard-reboot write_proc killall5 shutdown \
-minit-update
+minit-update serdo
 
 #CFLAGS=-pipe -march=i386 -fomit-frame-pointer -Os -I../dietlibc/include
-DIET=diet
 CC=gcc
 CFLAGS=-Wall -W -pipe -fomit-frame-pointer -Os
 CROSS=
@@ -10,25 +9,50 @@ CROSS=
 LDFLAGS=-s
 MANDIR=/usr/man
 
-minit: minit.o split.o openreadclose.o fmt_ulong.o str_len.o opendevconsole.o
-	$(DIET) $(CROSS)$(CC) $(LDFLAGS) -o minit $^
+path = $(subst :, ,$(PATH))
+diet_path = $(foreach dir,$(path),$(wildcard $(dir)/diet))
+ifeq ($(strip $(diet_path)),)
+ifneq ($(wildcard /opt/diet/bin/diet),)
+DIET=/opt/diet/bin/diet
+else
+DIET=
+endif
+else
+DIET:=$(strip $(diet_path))
+endif
 
-msvc: msvc.o fmt_ulong.o buffer_1.o buffer_2.o buffer_puts.o \
-buffer_putsflush.o buffer_putulong.o buffer_put.o byte_copy.o \
-buffer_flush.o buffer_stubborn.o buffer_putflush.o str_len.o \
-str_start.o
-	$(DIET) $(CROSS)$(CC) $(LDFLAGS) -o msvc $^
+ifneq ($(DEBUG),)
+CFLAGS+=-g
+LDFLAGS+=-g
+else
+CFLAGS+=-O2 -fomit-frame-pointer
+LDFLAGS+=-s
+ifneq ($(DIET),)
+DIET+=-Os
+endif
+endif
 
-minit-update: minit-update.o buffer_1.o buffer_2.o buffer_puts.o \
-buffer_putsflush.o buffer_put.o buffer_flush.o buffer_stubborn.o \
-buffer_putflush.o byte_copy.o split.o str_len.o openreadclose.o
-	$(DIET) $(CROSS)$(CC) $(LDFLAGS) -o minit-update $^
+LDLIBS=-lowfat
+
+libowfat_path = $(strip $(foreach dir,../libowfat*,$(wildcard $(dir)/textcode.h)))
+ifneq ($(libowfat_path),)
+CFLAGS+=$(foreach fnord,$(libowfat_path),-I$(dir $(fnord)))
+LDFLAGS+=$(foreach fnord,$(libowfat_path),-L$(dir $(fnord)))
+endif
+
+minit: minit.o split.o openreadclose.o opendevconsole.o
+msvc: msvc.o
+minit-update: minit-update.o split.o openreadclose.o
+serdo: serdo.o
 
 shutdown: shutdown.o split.o openreadclose.o opendevconsole.o
 	$(DIET) $(CROSS)$(CC) $(LDFLAGS) -o shutdown $^
 
 %.o: %.c
 	$(DIET) $(CROSS)$(CC) $(CFLAGS) -c $<
+
+%: %.o
+	$(DIET) $(CROSS)$(CC) $(LDFLAGS) -o $@ $^ $(LDLIBS)
 
 clean:
 	rm -f *.o minit msvc pidfilehack hard-reboot write_proc killall5 \
@@ -72,27 +96,3 @@ tar: clean rename
 rename:
 	if test $(CURNAME) != $(VERSION); then cd .. && mv $(CURNAME) $(VERSION); fi
 
-buffer_1.o: buffer_1.c buffer.h
-buffer_2.o: buffer_2.c buffer.h
-buffer_flush.o: buffer_flush.c buffer.h
-buffer_put.o: buffer_put.c byte.h buffer.h
-buffer_putflush.o: buffer_putflush.c buffer.h
-buffer_puts.o: buffer_puts.c str.h buffer.h
-buffer_putsflush.o: buffer_putsflush.c str.h buffer.h
-buffer_putulong.o: buffer_putulong.c buffer.h fmt.h
-buffer_stubborn.o: buffer_stubborn.c buffer.h
-byte_copy.o: byte_copy.c byte.h
-fmt_ulong.o: fmt_ulong.c fmt.h
-hard-reboot.o: hard-reboot.c
-killall5.o: killall5.c
-minit.o: minit.c fmt.h str.h
-msvc.o: msvc.c str.h fmt.h buffer.h
-openreadclose.o: openreadclose.c
-pidfilehack.o: pidfilehack.c
-shutdown.o: shutdown.c
-split.o: split.c
-str_len.o: str_len.c str.h
-str_start.o: str_start.c str.h
-t.o: t.c
-write_proc.o: write_proc.c
-opendevconsole.o: opendevconsole.c
