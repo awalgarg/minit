@@ -108,7 +108,9 @@ main(int argc,char *argv[]) {
 	len=uptime(argv[1]);
 	buffer_putulong(buffer_1,len);
 	buffer_putsflush(buffer_1," seconds\n");
+	if (pid==0) return 2; else if (pid==1) return 3; else return 0;
       }
+      goto error;
     } else {
       int i;
       int sig=0;
@@ -122,27 +124,29 @@ main(int argc,char *argv[]) {
 	case 'i': sig=SIGINT; goto dokill; break;
 	case 't': sig=SIGTERM; goto dokill; break;
 	case 'k': sig=SIGKILL; goto dokill; break;
-	case 'o': /* TODO: start but don't restart */
+	case 'o':
 	  if (startservice(argv[2]) || respawn(argv[2],0)) {
 	    buffer_puts(buffer_2,"Could not start ");
 	    buffer_puts(buffer_2,argv[2]);
 	    buffer_putsflush(buffer_2,"\n");
+	    goto error;
 	  }
 	  break;
-	case 'd': /* TODO: down */
+	case 'd':
 	  pid=__readpid(argv[2]);
 	  if (pid==0) {
 	    buffer_putsflush(buffer_2,"service not found");
-	    return 1;
+	    goto error;
 	  } else if (pid==1)
 	    return 0;
-	  if (respawn(argv[2],0) || kill(pid,SIGTERM));
+	  if (respawn(argv[2],0) || kill(pid,SIGTERM) || kill(pid,SIGCONT));
 	  break;
-	case 'u': /* TODO: up */
+	case 'u':
 	  if (startservice(argv[2]) || respawn(argv[2],1)) {
 	    buffer_puts(buffer_2,"Could not start ");
 	    buffer_puts(buffer_2,argv[2]);
 	    buffer_putsflush(buffer_2,"\n");
+	    goto error;
 	  }
 	  break;
 	case 'P':
@@ -152,6 +156,7 @@ main(int argc,char *argv[]) {
 	      buffer_puts(buffer_2,"Could not set pid of service ");
 	      buffer_puts(buffer_2,argv[2]);
 	      buffer_putsflush(buffer_2,"\n");
+	      goto error;
 	    }
 	}
       }
@@ -163,9 +168,15 @@ dokill:
 	  buffer_puts(buffer_2,"Could not send signal to PID ");
 	  buffer_putulong(buffer_2,pid);
 	  buffer_putsflush(buffer_2,"\n");
+error:
+	  return 1;
 	}
       }
+      return 0;
     }
+  } else {
+    buffer_putsflush(buffer_2,"could not open /etc/minit/in or /etc/minit/out\n");
+    return 1;
   }
 }
 
