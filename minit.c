@@ -345,8 +345,8 @@ int main(int argc, char *argv[]) {
   time_t last=time(0);
   int nfds=1;
 
-  infd=open("/etc/minit/in",O_RDWR);
-  outfd=open("/etc/minit/out",O_RDWR|O_NONBLOCK);
+  infd=open(MINITROOT "/in",O_RDWR);
+  outfd=open(MINITROOT "/out",O_RDWR|O_NONBLOCK);
 
   if (getpid()==1) {
     int fd;
@@ -371,7 +371,7 @@ int main(int argc, char *argv[]) {
   }
   
   if (infd<0 || outfd<0) {
-    _puts("minit: could not open /etc/minit/in or /etc/minit/out\n");
+    _puts("minit: could not open " MINITROOT "/in or " MINITROOT "/out\n");
     sulogin();
     nfds=0;
   } else

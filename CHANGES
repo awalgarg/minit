@@ -9,6 +9,7 @@
     version of itself, preferably (Florian Westphal)
   also add minit-update program to download state from old minit and
     upload state to new minit after update (Florian Westphal)
+  #include minit.h and use MINITROOT consistently (Lordy)
 
 0.9.1:
   fix embarassing typo in msvc (Gelu G. Lupas)

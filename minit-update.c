@@ -187,10 +187,10 @@ int main(int argc, char **argv) {
    } else die(USAGE);
  }
 
- infd=open("/etc/minit/in",O_WRONLY);
- outfd=open("/etc/minit/out",O_RDONLY);
+ infd=open(MINITROOT "/in",O_WRONLY);
+ outfd=open(MINITROOT "/out",O_RDONLY);
  
- if (infd<0 || outfd<0) die("could not open /etc/minit/in or /etc/minit/out\n");
+ if (infd<0 || outfd<0) die("could not open " MINITROOT "/in or " MINITROOT "/out\n");
 
  while (lockf(infd,F_TLOCK,1)) {
     buffer_puts_strerror("could not acquire lock: ");

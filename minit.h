@@ -1,5 +1,6 @@
 #define MINITROOT "/etc/minit"
 
+#ifndef NOVARS
 static struct process {
   char *name;
 /*  char **argv; */
@@ -14,4 +15,4 @@ static struct process {
 static int infd,outfd;
 static int maxprocess=-1;
 static int processalloc;
-
+#endif

@@ -41,7 +41,8 @@ static inline int __write2(const char*s) { return write(2,s,str_len(s)); }
 #define USE_MINIT
 
 #ifdef USE_MINIT
-#define MINITROOT "/etc/minit"
+#define NOVARS
+#include "minit.h"
 #endif
 
 extern void opendevconsole();
@@ -129,8 +130,8 @@ int minit_shutdown(int level) {
   int retval;
 
   __write2("Shutting down minit services: \n");
-  infd=open("/etc/minit/in", O_WRONLY);
-  outfd=open("/etc/minit/out", O_RDONLY);
+  infd=open(MINITROOT "/in", O_WRONLY);
+  outfd=open(MINITROOT "/out", O_RDONLY);
   if (infd>=0) {
     while (lockf(infd, F_TLOCK, 1)) {
       __write2("could not acquire lock!\n");

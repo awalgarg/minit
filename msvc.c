@@ -7,6 +7,8 @@
 #include "str.h"
 #include "fmt.h"
 #include "buffer.h"
+#define NOVARS
+#include "minit.h"
 
 static int infd,outfd;
 
@@ -14,7 +16,7 @@ static char buf[1500];
 
 void addservice(char* service) {
   char* x;
-  if (str_start(service,"/etc/minit/"))
+  if (str_start(service,MINITROOT "/"))
     service+=11;
   x=service+str_len(service)-1;
   while (x>service && *x=='/') { *x=0; --x; }
@@ -105,8 +107,8 @@ int main(int argc,char *argv[]) {
 	" -C\tClear; remove service form active list\n\n");
     return 0;
   }
-  infd=open("/etc/minit/in",O_WRONLY);
-  outfd=open("/etc/minit/out",O_RDONLY);
+  infd=open(MINITROOT "/in",O_WRONLY);
+  outfd=open(MINITROOT "/out",O_RDONLY);
   if (infd>=0) {
     while (lockf(infd,F_LOCK,1)) {
       buffer_putsflush(buffer_2,"could not acquire lock!\n");
@@ -236,7 +238,7 @@ dokill:
       return ret;
     }
   } else {
-    buffer_putsflush(buffer_2,"could not open /etc/minit/in or /etc/minit/out\n");
+    buffer_putsflush(buffer_2,"minit: could not open " MINITROOT "/in or " MINITROOT "/out\n");
     return 1;
   }
 }
