@@ -530,11 +530,11 @@ ok:
 	    write(outfd,"1:",2);
 	    {
 	      int i;
-#if 1
+#if 0
 	      printf("looking for father==%d\n",idx);
 #endif
 	      for (i=0; i<=maxprocess; ++i) {
-#if 1
+#if 0
 		printf("pid of %d(%s) is %lu, father is %d\n",
 		       i,root[i].name?root[i].name:"[none]",root[i].pid,root[i].father);
 #endif

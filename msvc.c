@@ -144,6 +144,7 @@ int main(int argc,char *argv[]) {
 	" -k\tkill; send SIGKILL\n"
 	" -g\tget; output just the PID\n"
 	" -Ppid\tset PID of service (for pidfilehack)\n"
+	" -D service\tprint services started as dependency\n"
 	" -C\tClear; remove service form active list\n\n");
     return 0;
   }
@@ -286,24 +287,3 @@ dokill:
     return 1;
   }
 }
-
-/*
-  -u   Up.  If the service is not running, start it.  If the service stops,
-       restart it.
-  -d   Down.  If the service is running, send it a TERM signal and then a CONT
-       signal.  After it stops, do not restart it.
-  -o   Once.  If the service is not running, start it.  Do not restart it if it
-       stops.
-  -r   Tell supervise that the service is normally running; this affects status
-       messages.
-  -s   Tell supervise that the service is normally stopped; this affects status
-       messages.
-  -p   Pause.  Send the service a STOP signal.
-  -c   Continue.  Send the service a CONT signal.
-  -h   Hangup.  Send the service a HUP signal.
-  -a   Alarm.  Send the service an ALRM signal.
-  -i   Interrupt.  Send the service an INT signal.
-  -t   Terminate.  Send the service a TERM signal.
-  -k   Kill.  Send the service a KILL signal.
-  -x   Exit.  supervise will quit as soon as the service is down.
-*/
