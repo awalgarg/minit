@@ -45,3 +45,6 @@ Each service directory can contain the following files/symlinks:
     writes to stdout.  File descriptors will be reused, i.e. if the log
     process dies and is restarted, no log entries will be lost and there
     will be no SIGPIPE.
+
+Please see http://cr.yp.to/daemontools/multilog.html for a very good
+logging tool.
