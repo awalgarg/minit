@@ -21,6 +21,8 @@
 
 #include "minit.h"
 
+char** Argv;
+
 #undef printf
 extern int printf(const char *format,...);
 
@@ -282,10 +284,20 @@ int startservice(int service,int pause,int father) {
       int depc,i;
       deps=split(s,'\n',&depc,0,0);
       for (i=0; i<depc; i++) {
-	int Service;
+	int Service,blacklisted,j;
 	if (deps[i][0]=='#') continue;
 	Service=loadservice(deps[i]);
-	if (Service>=0 && root[Service].pid!=1)
+
+#if 1
+	for (j=blacklisted=0; Argv[j]; ++j)
+	  if (Argv[j][0]=='-' && !strcmp(Argv[j]+1,deps[i])) {
+	    blacklisted=1;
+	    ++Argv[j];
+	    break;
+	  }
+#endif
+
+	if (Service>=0 && root[Service].pid!=1 && !blacklisted)
 	  startservice(Service,0,service);
       }
       fchdir(dir);
@@ -365,6 +377,8 @@ int main(int argc, char *argv[]) {
   for (i=0; i<HISTORY; ++i)
     history[i]=-1;
 #endif
+
+  Argv=argv;
 
   infd=open(MINITROOT "/in",O_RDWR);
   outfd=open(MINITROOT "/out",O_RDWR|O_NONBLOCK);

@@ -17,6 +17,10 @@
     This is useful to see which process is looping.
   fix bug in msvc killing process group if readpid failed
     (Erich Schubert)
+  You can now blacklist services temporarily by passing -servicename on
+    the kernel command line.  The first time they are to be started will
+    then be skipped.  Use this, for example, to not start the dhcp
+    client when your notebook is not plugged in a network.
 
 0.9.1:
   fix embarassing typo in msvc (Gelu G. Lupas)
