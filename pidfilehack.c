@@ -37,7 +37,7 @@ int main(int argc, char* argv[]) {
     int fd=open(argv[2],O_RDONLY);
     if (fd>=0) {
       static char buf[100] = "-P";
-      int len=read(fd,buf+2,100);
+      int len=read(fd,buf+2,98);
       close(fd);
       if (len>0) {
 	char* _argv[] = { "msvc", 0, 0, 0 };
