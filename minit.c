@@ -192,7 +192,7 @@ again:
       argv[0]=argv0;
     if (__stdin != 0) dup2(__stdin,0);
     if (__stdout != 1) dup2(__stdout,1);
-    execve("run",argv,environ);
+    execve(argv0,argv,environ);
     _exit(0);
   abort:
     free(argv0);
@@ -407,7 +407,7 @@ main(int argc, char *argv[]) {
       dowait=0; */
       childhandler();
 /*    } */
-    switch (poll(&pfd,nfds,500)) {
+    switch (poll(&pfd,nfds,500000)) {
     case -1:
       if (errno==EINTR) {
 	childhandler();
