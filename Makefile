@@ -18,8 +18,9 @@ str_start.o
 	$(DIET) $(CROSS)$(CC) $(LDFLAGS) -o msvc $^
 
 minit-update: minit-update.o buffer_1.o buffer_2.o buffer_puts.o \
-buffer_putsflush.o buffer_put.o buffer_flush.o buffer_stubborn.o buffer_putflush.o byte_copy.o \
-split.o str_len.o openreadclose.o
+buffer_putsflush.o buffer_put.o buffer_flush.o buffer_stubborn.o \
+buffer_putflush.o byte_copy.o split.o str_len.o openreadclose.o \
+str_len.o
 	$(DIET) $(CROSS)$(CC) $(LDFLAGS) -o minit-update $^
 
 shutdown: shutdown.o split.o openreadclose.o opendevconsole.o

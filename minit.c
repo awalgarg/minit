@@ -202,9 +202,9 @@ again:
       argv[1]=0;
     }
     argv0=(char*)malloc(PATH_MAX+1);
-    if (!argv || !argv0) goto abort;
+    if (!argv || !argv0) _exit(1);
     if (readlink("run",argv0,PATH_MAX)<0) {
-      if (errno!=EINVAL) goto abort;	/* not a symbolic link */
+      if (errno!=EINVAL) _exit(1);	/* not a symbolic link */
       argv0=strdup("./run");
     }
 /*    chdir("/"); */
@@ -224,10 +224,6 @@ again:
     }
     execve(argv0,argv,environ);
     _exit(1);	
-  abort:
-    free(argv0);
-    free(argv);
-    _exit(0);
   default:
     fd=open("sync",O_RDONLY);
     if (fd>=0) {
@@ -441,14 +437,15 @@ int main(int argc, char *argv[]) {
 
 /*	write(1,buf,str_len(buf)); write(1,"\n",1); */
 #ifdef UPDATE
-       if(!strcmp(buf,"update")) {
-         char *newargs[]={"/sbin/minit", "--update" ,0};
-         execve("/sbin/minit",newargs, environ);
-       }
+        if(!strcmp(buf,"update")) {
+          char *newargs[]={"/sbin/minit", "--update" ,0};
+          execve("/sbin/minit",newargs, environ);
+        }
+	idx=findservice(buf+1);
 
-	if (((buf[0]!='U') && buf[0]!='s') && ((idx=findservice(buf+1))<0))
+	if (((buf[0]!='U') && buf[0]!='s') && (idx<0))
 #else
-	if (buf[0]!='s' && ((idx=findservice(buf+1))<0))
+	if (buf[0]!='s' && (idx<0))
 #endif
 error:
 	  write(outfd,"0",1);

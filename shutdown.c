@@ -27,11 +27,14 @@
 #include <stdlib.h>
 #include <sys/wait.h>
 
+#include "str.h"
+
 #ifdef __dietlibc__
 #include <write12.h>
 #else
-static inline int __write1(const char*s) { return write(1,s,strlen(s)); }
-static inline int __write2(const char*s) { return write(2,s,strlen(s)); }
+#include <unistd.h>
+static inline int __write1(const char*s) { return write(1,s,str_len(s)); }
+static inline int __write2(const char*s) { return write(2,s,str_len(s)); }
 #endif
 
 #define ALLOW_SUID
@@ -100,7 +103,7 @@ int minit_serviceDown(char *service) {
   // get the pid
   buf[0]='p';
   strncpy(buf+1, service, 1400);
-  write(infd, buf, strlen(buf));
+  write(infd, buf, str_len(buf));
   len=read(outfd, buf, 1500);
   if (len != 0) {
     buf[len]=0;
@@ -113,7 +116,7 @@ int minit_serviceDown(char *service) {
     buf[0]='r'; // we want to disable respawning first
     strncpy(buf+1, service, 1400);
     buf[1400]=0;
-    write(infd, buf, strlen(buf));
+    write(infd, buf, str_len(buf));
     read(outfd, buf, 1500);
     i=kill(pid, SIGTERM);
     if (i == 0) __write2("\t\tdone\n");
@@ -129,7 +132,7 @@ int minit_shutdown(int level) {
   infd=open("/etc/minit/in", O_WRONLY);
   outfd=open("/etc/minit/out", O_RDONLY);
   if (infd>=0) {
-    while (lockf(infd, F_LOCK, 1)) {
+    while (lockf(infd, F_TLOCK, 1)) {
       __write2("could not acquire lock!\n");
       sleep(1);
     }  

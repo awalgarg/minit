@@ -2,12 +2,14 @@
 #include <sys/reboot.h>
 #include <stdlib.h>
 
+#include "str.h"
+
 #define ABORTMSG "hard-reboot: Aborted.\n"
 #define USAGE "Say \"hard-reboot (RESTART|HALT|POWER_OFF)\" if you really mean it.\n"
 
 void usage(void) {
-  write(2, ABORTMSG, strlen(ABORTMSG));
-  write(2, USAGE, strlen(USAGE));
+  write(2, ABORTMSG, str_len(ABORTMSG));
+  write(2, USAGE, str_len(USAGE));
   exit(1);
 }
 
