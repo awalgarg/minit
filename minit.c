@@ -337,8 +337,10 @@ void childhandler() {
     return;
   }
 #endif
-  killed=waitpid(-1,&status,WNOHANG);
-  handlekilled(killed);
+  do {
+    killed=waitpid(-1,&status,WNOHANG);
+    handlekilled(killed);
+  } while (killed && killed!=(pid_t)-1);
 }
 
 static volatile int dowinch=0;

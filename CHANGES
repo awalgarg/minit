@@ -1,3 +1,7 @@
+0.8:
+  call waitpid repeatedly until it returns "no children".
+  This reaps zombies faster.
+
 0.7:
   found and fixed the bug that made the logging support not work when
     minit was running as PID 1.
