@@ -43,11 +43,11 @@ killall5: killall5.c
 	$(DIET) $(CROSS)$(CC) $(CFLAGS) -o $@ $^
 
 install-files:
+	install -d $(DESTDIR)/etc/minit $(DESTDIR)/sbin $(DESTDIR)/bin
 	install minit pidfilehack $(DESTDIR)/sbin
 	install write_proc hard-reboot $(DESTDIR)/sbin
 	install msvc $(DESTDIR)/bin
 	install -m 4750 shutdown $(DESTDIR)/sbin
-	test -d $(DESTDIR)/etc/minit || mkdir $(DESTDIR)/etc/minit
 
 install-fifos:
 	-mkfifo -m 600 $(DESTDIR)/etc/minit/in $(DESTDIR)/etc/minit/out
