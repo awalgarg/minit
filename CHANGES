@@ -1,3 +1,7 @@
+0.9:
+  For stopped services, minit did not record the time when it finished,
+    but when it was started.
+
 0.8:
   call waitpid repeatedly until it returns "no children".
   This reaps zombies faster.

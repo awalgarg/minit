@@ -152,8 +152,10 @@ void handlekilled(pid_t killed) {
 #endif
       circsweep();
       startservice(i,time(0)-root[i].startedat<1);
-    } else
+    } else {
+      root[i].startedat=time(0);
       root[i].pid=1;
+    }
   }
 }
 
