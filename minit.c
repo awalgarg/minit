@@ -11,6 +11,7 @@
 #include <signal.h>
 #include <sys/wait.h>
 #include <stdio.h>
+#include <linux/kd.h>
 
 #define MINITROOT "/etc/minit"
 
@@ -265,8 +266,12 @@ void childhandler() {
 }
 
 static volatile int dowait=0;
+static volatile int dowinch=0;
+static volatile int doint=0;
 
 void sigchild(int whatever) { dowait=1; }
+void sigwinch(int sig) { dowinch=1; }
+void sigint(int sig) { doint=1; }
 
 main(int argc, char *argv[]) {
   /* Schritt 1: argv[1] als Service nehmen und starten */
@@ -279,6 +284,19 @@ main(int argc, char *argv[]) {
   exit(0); */
   int nfds=1;
 
+  if (getpid()==1) {
+    int fd;
+    reboot(0);
+    if ((fd=open("/dev/tty0",O_RDWR|O_NOCTTY))) {
+      ioctl(fd, KDSIGACCEPT, SIGWINCH);
+      close(fd);
+    } else
+      ioctl(0, KDSIGACCEPT, SIGWINCH);
+  }
+/*  signal(SIGPWR,sighandler); don't know what to do about it */
+/*  signal(SIGHUP,sighandler); ??? */
+  signal(SIGWINCH,sigwinch);	/* keyboard request, aka Alt-Up-Arrow */
+  signal(SIGINT,sigint);	/* Ctrl-Alt-Del */
   signal(SIGCHLD,sigchild);
   if (infd<0 || outfd<0) {
     puts("minit: could not open /etc/minit/in or /etc/minit/out\n");
@@ -297,6 +315,14 @@ main(int argc, char *argv[]) {
     int status;
     int i;
     char buf[1501];
+    if (doint) {
+      doint=0;
+      startservice(loadservice("ctrlaltdel"),0);
+    }
+    if (dowinch) {
+      doint=0;
+      startservice(loadservice("kbreq"),0);
+    }
 /*    if (dowait) {
       dowait=0; */
       childhandler();

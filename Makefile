@@ -1,7 +1,7 @@
 all: minit msvc pidfilehack
 
 CFLAGS=-pipe -march=i386 -fomit-frame-pointer -Os -I../dietlibc/include
-LDFLAGS=../dietlibc/start.o ../dietlibc/dietlibc.a
+#LDFLAGS=../dietlibc/start.o ../dietlibc/dietlibc.a
 
 minit: minit.o split.o openreadclose.o
 	gcc -g $(LDFLAGS) -o minit $^
