@@ -1,3 +1,7 @@
+0.6.1:
+  fixed msvc and minit handling of msvc -P.
+  pidfilehack has now actually been tested and works with ssh.
+
 0.6:
   add tty and session leadership magic and I actually got getty to work
     as init on my laptop, i.e. in production use!

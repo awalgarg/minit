@@ -38,9 +38,9 @@ int setpid(char *service, pid_t pid) {
   int len;
   buf[0]='P';
   strncpy(buf+1,service,1400);
-  tmp+=strlen(buf);
+  tmp=buf+strlen(buf)+1;
   tmp[fmt_ulong(tmp,pid)]=0;
-  write(infd,buf,strlen(buf));
+  write(infd,buf,strlen(buf)+strlen(tmp)+2);
   len=read(outfd,buf,1500);
   return (len!=1 || buf[0]=='0');
 }
