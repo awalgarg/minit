@@ -56,7 +56,7 @@ shutdown: shutdown.o split.o openreadclose.o opendevconsole.o
 
 clean:
 	rm -f *.o minit msvc pidfilehack hard-reboot write_proc killall5 \
-	shutdown
+	shutdown minit-update serdo
 
 test: test.c
 	gcc -nostdlib -o $@ $^ -I../dietlibc/include ../dietlibc/start.o ../dietlibc/dietlibc.a

@@ -21,6 +21,45 @@
 
 #include "minit.h"
 
+#define MALLOC_TEST
+#if !defined(__dietlibc__) && !defined(__GLIBC__)
+#undef MALLOC_TEST
+#endif
+
+#ifdef MALLOC_TEST
+extern void* __libc_malloc(size_t size);
+extern void* __libc_realloc(void* x,size_t size);
+extern void __libc_free(void* x);
+static char malloc_buf[2048];
+static unsigned long n;
+static struct process procbuf[100];
+void *malloc(size_t size) {
+  if (n+size<sizeof(malloc_buf)) {
+    char* tmp=malloc_buf+n;
+    n+=size;
+    n=(n+3)&~3;
+    return tmp;
+  }
+  return __libc_malloc(size);
+}
+void free(void* x) {
+  if ((char*)x>=malloc_buf && (char*)x<malloc_buf+sizeof(malloc_buf)) return;
+  __libc_free(x);
+}
+void* realloc(void* x,size_t size) {
+  if (x==0 || x==procbuf) {
+    void* y;
+    if (size<=sizeof(procbuf))
+      return procbuf;
+    y=__libc_malloc(size);
+    if (!y) return 0;
+    memcpy(y,x,size);
+    return y;
+  }
+  return __libc_realloc(x,size);
+}
+#endif
+
 char** Argv;
 
 #undef printf
