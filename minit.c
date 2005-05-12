@@ -30,9 +30,9 @@
 extern void* __libc_malloc(size_t size);
 extern void* __libc_realloc(void* x,size_t size);
 extern void __libc_free(void* x);
-static char malloc_buf[2048];
+static char malloc_buf[1024];
 static unsigned long n;
-static struct process procbuf[100];
+static struct process procbuf[50];
 void *malloc(size_t size) {
   if (n+size<sizeof(malloc_buf)) {
     char* tmp=malloc_buf+n;

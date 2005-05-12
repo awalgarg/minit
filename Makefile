@@ -78,7 +78,7 @@ install-files:
 	install minit pidfilehack $(DESTDIR)/sbin
 	install write_proc hard-reboot minit-update $(DESTDIR)/sbin
 	install msvc serdo $(DESTDIR)/bin
-	install -m 4750 shutdown $(DESTDIR)/sbin
+	if test -f $(DESTDIR)/sbin/shutdown; then install shutdown $(DESTDIR)/sbin/mshutdown; else install shutdown $(DESTDIR)/sbin/shutdown; fi
 	test -f $(DESTDIR)/sbin/init || ln $(DESTDIR)/sbin/minit $(DESTDIR)/sbin/init
 	install -m 644 hard-reboot.8 minit-list.8 minit-shutdown.8 minit-update.8 minit.8 msvc.8 pidfilehack.8 serdo.8 $(DESTDIR)$(MANDIR)/man8
 
