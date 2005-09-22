@@ -326,7 +326,7 @@ dokill:
 	  }
 	  tmp[fmt_ulong(tmp,sig)]=0;
 	  tmp2[fmt_ulong(tmp2,pid)]=0;
-	  carp(argv[i],": could not send signal ",tmp," to PID ",pid,": ",s);
+	  carp(argv[i],": could not send signal ",tmp," to PID ",tmp2,": ",s);
 	  ret=1;
 	}
       }
