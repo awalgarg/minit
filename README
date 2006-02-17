@@ -46,6 +46,21 @@ Each service directory can contain the following files/symlinks:
     process dies and is restarted, no log entries will be lost and there
     will be no SIGPIPE.
 
+  nice
+
+    a plain text file containing the value to add to the nice level via the
+    nice systemcall.
+
+  in
+
+    this file is used for stdin.
+
+  out
+
+    this file is used for stdout and stderr.
+    e.g. a symlink to /dev/null
+
+
 Please see http://cr.yp.to/daemontools/multilog.html for a very good
 logging tool.
 

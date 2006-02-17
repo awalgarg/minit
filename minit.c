@@ -237,6 +237,21 @@ again:
       req.tv_nsec=500000000;
       nanosleep(&req,0);
     }
+    if ((fd=open("in",O_RDONLY))!=-1) {
+      dup2(fd,0);
+      fcntl(0,F_SETFD,0);
+    }
+    if ((fd=open("out",O_WRONLY))!=-1) {
+      dup2(fd,1);
+      dup2(fd,2);
+      fcntl(1,F_SETFD,0);
+      fcntl(2,F_SETFD,0);
+    }
+    if (!openreadclose("nice",&s,&len)) {
+      int n=atoi(s);
+      nice(n);
+      s=0;
+    }
     if (!openreadclose("params",&s,&len)) {
       argv=split(s,'\n',&argc,2,1);
       if (argv[argc-1]) argv[argc-1]=0; else argv[argc]=0;
