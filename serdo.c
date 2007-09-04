@@ -145,9 +145,15 @@ int batch(char* s) {
 }
 
 int main(int argc,char* argv[],char* env[]) {
+  static char* fakeargv[]={0,"script",0};
   int r;
   (void)argc;
-  if (argc<2) die(1,"usage: serdo [-c] filename");
+  if (argc<2) {
+    if (!access("script",O_RDONLY))
+      argv=fakeargv;
+    else
+      die(1,"usage: serdo [-c] filename");
+  }
   errmsg_iam("serdo");
   for (envc=0; envc<MAXENV && env[envc]; ++envc) envp[envc]=env[envc];
   envp[envc]=0;

@@ -20,6 +20,10 @@ serdo is very limited by design, but it is nice to have if you just want
 to run a few ifconfig, ip, route commands in sequence.  serdo will
 return the exit code of the last command it ran, 0 if none were given.
 
+If no file name is given, but a file called "script" exists in the
+current working directory, serdo will execute that file.  This saves a
+few inodes in a typical /etc/minit tree.
+
 .SH AUTHOR
 minit was written by Felix von Leitner and can be downloaded from
 .I http://www.fefe.de/minit/
