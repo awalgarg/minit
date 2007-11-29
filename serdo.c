@@ -58,9 +58,10 @@ int spawn(char** argv, int last) {
 
 int run(char* s,int last) {
   int i,spaces;
-  char** argv,**next;;
+  char** argv,**next;
   for (i=spaces=0; s[i]; ++i) if (s[i]==' ') ++spaces;
-  next=argv=alloca((spaces+1)*sizeof(char*));
+  next=argv=alloca((spaces+2)*sizeof(char*));
+
   while (*s) {
     while (*s && isspace(*s)) ++s;
     if (*s=='"') {
