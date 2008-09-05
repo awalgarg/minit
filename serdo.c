@@ -31,7 +31,7 @@ int envset(char* s) {
 }
 
 int spawn(char** argv, int last) {
-  int i;
+  int i,ignore;
   if (str_equal(argv[0],"cd")) {
     if (chdir(argv[1])==-1) {
       carpsys("chdir failed");
@@ -42,6 +42,8 @@ int spawn(char** argv, int last) {
     for (i=1; argv[i]; ++i) envset(argv[i]);
     return 0;
   }
+  ignore=(argv[0][0]=='-');
+  if (ignore) ++argv[0];
   if (!last) {
     if ((i=fork())==-1) diesys(1,"cannot fork");
   } else i=0;
@@ -51,6 +53,7 @@ int spawn(char** argv, int last) {
     _exit(execvp(argv[0],argv));
   }
   if (waitpid(i,&i,0)==-1) diesys(1,"waitpid failed");
+  if (ignore) return 0;
   if (!WIFEXITED(i))
     return -1;
   return WEXITSTATUS(i);
