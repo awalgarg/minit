@@ -70,7 +70,7 @@ int run(char* s,int last) {
     if (*s=='"') {
       ++s;
       *next=s;
-      while (*s && s[-1] != '\\' && *s != '"') ++s;
+      while (*s && (*s != '"' || s[-1] == '\\')) ++s;
       if (!*s) {
 	--*next;
 	break;
@@ -80,7 +80,7 @@ int run(char* s,int last) {
     } else if (*s=='\'') {
       ++s;
       *next=s;
-      while (*s && s[-1] != '\\' && *s != '\'') ++s;
+      while (*s && (*s != '\'' || s[-1] == '\\')) ++s;
       if (!*s) {
 	--*next;
 	break;
