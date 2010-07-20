@@ -6,6 +6,8 @@
 #include <sys/wait.h>
 #include <str.h>
 #include <byte.h>
+#include <scan.h>
+#include <sys/resource.h>
 
 #define MAXENV 256
 char* envp[MAXENV+2];
@@ -32,18 +34,59 @@ int envset(char* s) {
 
 int spawn(char** argv, int last) {
   int i,ignore;
+  ignore=(argv[0][0]=='-');
+  if (ignore) ++argv[0];
   if (str_equal(argv[0],"cd")) {
     if (chdir(argv[1])==-1) {
       carpsys("chdir failed");
-      return -1;
+failornot:
+      return ignore?0:-1;
     }
     return 0;
   } else if (str_equal(argv[0],"export")) {
     for (i=1; argv[i]; ++i) envset(argv[i]);
     return 0;
+  } else if (str_equal(argv[0],"ulimit")) {
+    struct rlimit rl;
+    for (i=1; argv[i] && argv[i+1]; ++i) {
+      int id=-1;
+      if (argv[i][0]!='-') {
+ulimitsyntax:
+	carp("ulimit syntax error: ",argv[i]);
+	continue;
+      }
+      switch(argv[i][1]) {
+	case 'c': id=RLIMIT_CORE; break;
+	case 'd': id=RLIMIT_DATA; break;
+	case 'e': id=RLIMIT_NICE; break;
+	case 'f': id=RLIMIT_FSIZE; break;
+	case 'i': id=RLIMIT_SIGPENDING; break;
+	case 'l': id=RLIMIT_MEMLOCK; break;
+	case 'm': id=RLIMIT_RSS; break;
+	case 'n': id=RLIMIT_NOFILE; break;
+	case 'r': id=RLIMIT_RTPRIO; break;
+	case 's': id=RLIMIT_STACK; break;
+	case 't': id=RLIMIT_CPU; break;
+	case 'u': id=RLIMIT_NPROC; break;
+	case 'v': id=RLIMIT_AS; break;
+	case 'x': id=RLIMIT_LOCKS; break;
+	default: goto ulimitsyntax;
+      }
+      if (!strcmp(argv[i+1],"unlimited")) {
+	rl.rlim_cur=rl.rlim_max=RLIM_INFINITY;
+      } else {
+	unsigned long ul;
+	if (argv[i+1][scan_ulong(argv[i+1],&ul)])
+	  goto ulimitsyntax;
+	rl.rlim_cur=rl.rlim_max=ul;
+      }
+      if (setrlimit(id,&rl)==-1) {
+	carpsys("ulimit failed");
+	goto failornot;
+      }
+    }
+    return 0;
   }
-  ignore=(argv[0][0]=='-');
-  if (ignore) ++argv[0];
   if (!last) {
     if ((i=fork())==-1) diesys(1,"cannot fork");
   } else i=0;
