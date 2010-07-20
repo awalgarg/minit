@@ -48,7 +48,7 @@ failornot:
     return 0;
   } else if (str_equal(argv[0],"ulimit")) {
     struct rlimit rl;
-    for (i=1; argv[i] && argv[i+1]; ++i) {
+    for (i=1; argv[i] && argv[i+1]; i+=2) {
       int id=-1;
       if (argv[i][0]!='-') {
 ulimitsyntax:
@@ -133,13 +133,14 @@ int run(char* s,int last) {
     } else {
       *next=s;
       while (*s && *s!=' ' && *s!='\t') ++s;
-      if (!*s) break;
-      *s=0;
-      ++s;
+      if (*s) {
+	*s=0;
+	++s;
+      }
     }
     ++next;
   }
-  *++next=0;
+  *next=0;
 
   return spawn(argv,last);
 }
