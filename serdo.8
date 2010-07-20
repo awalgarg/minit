@@ -13,8 +13,9 @@ execute all the commands in it.  If a command fails, the whole batch job
 is aborted (unless -c is given as first paramter on the serdo command
 line).
 
-serdo understands the \fBcd\fR and \fBexport\fR sh(1) built-ins (no
-loops, no ~user expansion, no $FOO expansion, no backticks).
+serdo understands the \fBcd\fR, \fBexport\fR and \fBulimit\fR (set mode
+only) sh(1) built-ins (no loops, no ~user expansion, no $FOO expansion,
+no backticks).
 
 serdo is very limited by design, but it is nice to have if you just want
 to run a few ifconfig, ip, route commands in sequence.  serdo will
