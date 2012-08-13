@@ -159,14 +159,21 @@ int execute(char* s) {
     start=s;
 
     while (*s && *s != '\n') ++s;
+    /* advance to the end of the line */
     if (*s) {
+      /* not the last line in the file */
       char* tmp;
       *s=0;
       ++s;
+      /* If it's the last command in the file, we do not fork+exec but
+       * we execve it directly.  So we need to find out here if this is
+       * the last command in the file.  For that we need to skip all the
+       * lines after it that are comments */
       for (tmp=s; *tmp; ++tmp)
 	if (!isspace(*tmp) && *tmp=='#') {
-	  for (tmp=s+1; *tmp && *tmp!='\n'; ++tmp) ;
-	} else break;
+	  for (++tmp; *tmp && *tmp!='\n'; ++tmp) ;
+	} else
+	  break;
       last=(*tmp==0);
     } else
       last=1;
