@@ -14,16 +14,33 @@ is aborted (unless -c is given as first paramter on the serdo command
 line).
 
 serdo understands the \fBcd\fR, \fBexport\fR and \fBulimit\fR (set mode
-only) sh(1) built-ins (no loops, no ~user expansion, no $FOO expansion,
-no backticks).
+only) sh(1) built-ins (no loops, no globbiung, no ~user expansion, no
+$FOO expansion, no backticks).
 
 serdo is very limited by design, but it is nice to have if you just want
 to run a few ifconfig, ip, route commands in sequence.  serdo will
 return the exit code of the last command it ran, 0 if none were given.
 
-If no file name is given, but a file called "script" exists in the
-current working directory, serdo will execute that file.  This saves a
-few inodes in a typical /etc/minit tree.
+If no file name is given as command line argument, but a file called
+"script" exists in the current working directory, serdo will execute
+that file.  This saves a few inodes in a typical /etc/minit tree.
+
+.SH SYNTAX
+
+.B serdo scripts are Unix style text files with a list of commands, one
+per line.  Usual shell script rules do not apply.  No if, while,
+semicolons, no & to background jobs.
+
+Special commands that serdo does understand are cd, export, and ulimit.
+Spaces at the beginning of each line are ignored.  If a line starts with
+a '#', it is considered a comment and ignored.  Command line arguments
+that contain spaces can be grouped using single or double quotes.
+Characters can be escaped by putting a backslash ('\\') before them.
+
+Usually script execution is aborted if any command has a non-zero return
+value.  This can be overridden by putting a '-' character in front of
+a command in the script file (or globally by passing the -c command line
+argument to serdo).
 
 .SH AUTHOR
 minit was written by Felix von Leitner and can be downloaded from

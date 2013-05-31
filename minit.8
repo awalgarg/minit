@@ -21,13 +21,89 @@ option in \fI/etc/lilo.conf\fR,
 .I grub
 users can just append it to their "\fIkernel\fR image options" lines.
 
+Or, of course, you can just call the binary /sbin/init, which is the
+default name the kernel starts when no kernel options are given.
+
 .SH USAGE
-minit will by default do nothing except starting the minit service defined
-in
-.I /etc/minit/default
-which usually contains a file named
-.I depends
-specifying which services are to be started at bootup.
+minit will by default start the minit service called "default".  If
+command line arguments are present, those are started instead of
+"default".
+
+It is possible to blacklist a service that is normally started by
+passing its name with a - in front of it.  Example: default depends on
+init, init depends on loadgfxdriver, loadgfxdriver hangs the kernel in
+your kernel version so you want to boot without running it.  Then you
+could use grub to pass the additional kernel arguments "default
+-loadgfxdriver" to minit.  Minit would then run default and all its
+dependencies except loadgfxdriver.
+
+If the last service exits, minit will terminate.
+
+In case of catastrophic failure (for example if /etc/minit does not
+exist), minit will attempt to execute /sbin/sulogin.  A careful admin
+will put some kind of emergency login command and shell there to provide
+a way to hopefully be able to recover from partially corrupted boot
+media or botched minit installations.
+
+.SH SERVICES
+minit services are defined in /etc/minit/[servicename]/ .  When a service
+is started, minit changes into that directory, and reads the text file
+"depends".  Every line in that file is interpreted as the name of a
+service and launched recursively like this.  Finally, the file "run" is
+executed.  This is usually a symbolic link to a binary.
+
+If the file "params" exists, each line is passed as a command line
+argument to the service binary.  There is currently no way to pass
+command line arguments containing newline characters using this
+mechanism.  You would have to make run a shell script to do that.
+
+All services are launched asynchronously, unless the service directory
+contains a file called "sync".  If that file exists, minit blocks until
+the service finishes.  This is meant for things that need to be
+completed before anything else can occur in the boot process, for
+example mounting /usr or /proc.  Warning: minit will block when
+executing sync services, potentially leading to a deadlocked system.
+minit will also not respond to msvc while waiting for a sync service to
+commence.
+
+If a subdirectory called "log" exists, it is interpreted as a minit
+service, too, and its standard input is connected via a pipe to the
+standard output of the service.  This is meant to be used with tools
+like multilog from the daemontools, see http://cr.yp.to/daemontools.html
+
+It is possible to provide data on stdin to a process by putting it into
+a file (or fifo) called "in" in the service directory.  Likewise, if a
+file or fifo called "out" exists, stdout and stderr of the service will
+be redirected there.
+
+If a file called "nice" exists, its contents is interpreted as an
+integer and passed as argument to nice(2).
+
+If run is a symbolic link, minit will adjust argv[0] to the name
+part of it so programs like ps(1) and top(1) display the right name
+instead of "run".
+
+If a file called "respawn" exists, minit will restart the service should
+it ever exit.  The default is not to respawn, because in typical
+scenarios most minit services are actually boot time housekeeping and
+initialization processes and not actual services that are expected to
+run for prolonged periods of time.
+
+.SH "CONVERTING A DAEMON INTO A SERVICE"
+
+The concept of minit works around long running service processes that do
+not terminate.  If they do terminate, it is because of some unexpected
+failure or programming mistake and minit is expected to restart them.
+
+Unfortunately, most unix services are written as daemons.  When run from
+a shell, they fork into the background and return immediately.  In order
+for minit to be able to detect when those services abort, and to restart
+them if needed, minit needs to know the PID the service is running
+under.
+
+Most services have some way of turning off forking into the background.
+However, if the particular service does not have a way, pidfilehack can
+often be used.
 
 .SH AUTHOR
 minit was written by Felix von Leitner and can be downloaded from
@@ -38,4 +114,4 @@ This manpage was written by Erich Schubert <erich@debian.org>
 for the Debian GNU/Linux operating system.
 
 .SH "SEE ALSO"
-msvc(8), pidfilehack(8)
+msvc(8), serdo(8), pidfilehack(8)
