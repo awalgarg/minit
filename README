@@ -1,7 +1,7 @@
 To compile this, you need to have libowfat (http://www.fefe.de/libowfat/)!
 
 Each service gets its own directory under /etc/minit (change this in the
-source, it's a #define right at the start of minit.c).
+source, it's a #define right at the start of minit.h).
 
 Each service directory can contain the following files/symlinks:
 
