@@ -19,6 +19,8 @@
 #include "fmt.h"
 #include "str.h"
 
+#include <write12.h>
+
 #include "minit.h"
 
 #define MALLOC_TEST
@@ -290,9 +292,8 @@ again:
   default:
     fd=open("sync",O_RDONLY);
     if (fd>=0) {
-      pid_t p2;
       close(fd);
-      p2=waitpid(p,0,0);
+      waitpid(p,0,0);
       return 1;
     }
     return p;
@@ -441,8 +442,8 @@ int main(int argc, char *argv[]) {
   if (getpid()==1) {
     int fd;
     i_am_init=1;
-    reboot(0);
-    if ((fd=open("/dev/console",O_RDWR|O_NOCTTY))) {
+    reboot(RB_DISABLE_CAD);
+    if ((fd=open("/dev/console",O_RDWR|O_NOCTTY))!=-1) {
       ioctl(fd, KDSIGACCEPT, SIGWINCH);
       close(fd);
     } else
@@ -451,13 +452,16 @@ int main(int argc, char *argv[]) {
 /*  signal(SIGPWR,sighandler); don't know what to do about it */
 /*  signal(SIGHUP,sighandler); ??? */
   {
-    struct sigaction sa;
+    static struct sigaction sa;
     sigemptyset(&sa.sa_mask);
+    errno=0;
     sa.sa_sigaction=0;
     sa.sa_flags=SA_RESTART | SA_NOCLDSTOP;
     sa.sa_handler=sigchild; sigaction(SIGCHLD,&sa,0);
+    sa.sa_flags=SA_RESTART;
     sa.sa_handler=sigint; sigaction(SIGINT,&sa,0);	/* ctrl-alt-del */
     sa.sa_handler=sigwinch; sigaction(SIGWINCH,&sa,0);	/* keyboard request */
+    if (errno) __write2("sigaction failed!\n");
   }
 
   if (infd<0 || outfd<0) {
@@ -530,8 +534,7 @@ int main(int argc, char *argv[]) {
     case 1:
       i=read(infd,buf,1500);
       if (i>1) {
-	pid_t pid;
-	int idx,tmp;
+	int idx=0,tmp;
 	buf[i]=0;
 
 /*	write(1,buf,str_len(buf)); write(1,"\n",1); */
@@ -582,14 +585,13 @@ error:
 	    goto ok;
 	  case 'P':
 	    {
-	      unsigned char *x=buf+str_len(buf)+1;
+	      unsigned char *x=(unsigned char*)buf+str_len(buf)+1;
 	      unsigned char c;
 	      tmp=0;
 	      while ((c=*x++-'0')<10) tmp=tmp*10+c;
 	    }
 	    if (tmp>0) {
 	      if (kill(tmp,0)) goto error;
-	      pid=tmp;
 	    }
 	    root[idx].pid=tmp;
 	    goto ok;
