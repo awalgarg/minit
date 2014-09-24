@@ -4,6 +4,7 @@
     few inodes for the "params" files
   fix (apparently unexploitable) stack clobber in serdo
     (found by Nikola Vladov, many thanks)
+  add ulimit to serdo
 
 0.10:
   add sample script for /etc/minit/ctrlaltdel/run as
