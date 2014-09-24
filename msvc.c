@@ -97,7 +97,7 @@ void dumphistory() {
   first=1; last='x';
   write(infd,"h",1);
   for (;;) {
-    int prev,done;
+    int done;
     j=read(outfd,tmp,sizeof(tmp));
     if (j<1) break;
     done=i=0;
@@ -110,7 +110,6 @@ void dumphistory() {
     } else {
       if (!tmp[0] && last=='\n') break;
     }
-    prev=i;
     for (; i<j; ++i)
       if (!tmp[i]) {
 	tmp[i]=done?0:'\n';
@@ -135,7 +134,7 @@ void dumpdependencies(char* service) {
   write(infd,buf,str_len(buf));
   first=1; last='x';
   for (;;) {
-    int prev,done;
+    int done;
     j=read(outfd,tmp,sizeof(tmp));
     if (j<1) break;
     done=i=0;
@@ -148,7 +147,6 @@ void dumpdependencies(char* service) {
     } else {
       if (!tmp[0] && last=='\n') break;
     }
-    prev=i;
     for (; i<j; ++i)
       if (!tmp[i]) {
 	tmp[i]=done?0:'\n';
@@ -271,7 +269,8 @@ int main(int argc,char *argv[]) {
 	    } else if (pid==1)
 	      continue;
 	    else
-	      respawn(argv[i],0) || kill(pid,SIGTERM) || kill(pid,SIGCONT);
+	      if (respawn(argv[i],0) || kill(pid,SIGTERM) || kill(pid,SIGCONT))
+		carp(argv[i],": failed to send signal");
 	  }
 	  break;
 	case 'u':
