@@ -32,6 +32,10 @@ DIET+=-Os
 endif
 endif
 
+ifneq ($(MINITROOT),)
+CFLAGS+="-DMINITROOT=\"$(MINITROOT)\""
+endif
+
 LDLIBS=-lowfat
 
 libowfat_path = $(strip $(foreach dir,../libowfat*,$(wildcard $(dir)/textcode.h)))
