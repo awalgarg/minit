@@ -1,5 +1,5 @@
 all: minit msvc pidfilehack hard-reboot write_proc killall5 shutdown \
-minit-update serdo
+minit-update serdo ftrigger
 
 #CFLAGS=-pipe -march=i386 -fomit-frame-pointer -Os -I../dietlibc/include
 CC=gcc
@@ -48,6 +48,7 @@ endif
 
 minit: minit.o split.o openreadclose.o opendevconsole.o
 msvc: msvc.o
+ftrigger: ftrigger.o
 minit-update: minit-update.o split.o openreadclose.o
 serdo: serdo.o
 
@@ -62,7 +63,7 @@ shutdown: shutdown.o split.o openreadclose.o opendevconsole.o
 
 clean:
 	rm -f *.o minit msvc pidfilehack hard-reboot write_proc killall5 \
-	shutdown minit-update serdo
+	shutdown minit-update serdo ftrigger
 
 test: test.c
 	gcc -nostdlib -o $@ $^ -I../dietlibc/include ../dietlibc/start.o ../dietlibc/dietlibc.a

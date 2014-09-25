@@ -9,6 +9,7 @@
     started
   only install SIGWINCH and SIGINT if running with PID 1
   you can now do "make MINITROOT=/var/minit"
+  add ftrigger (run a command if a file changes)
 
 0.10:
   add sample script for /etc/minit/ctrlaltdel/run as
