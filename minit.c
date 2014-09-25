@@ -22,8 +22,6 @@
 #include "str.h"
 #include <compiletimeassert.h>
 
-#include <write12.h>
-
 #include "minit.h"
 
 compiletimeassert(sizeof(MINITROOT) + 64 < PATH_MAX);
@@ -495,7 +493,7 @@ int main(int argc, char *argv[]) {
       sa.sa_handler=sigint; sigaction(SIGINT,&sa,0);	/* ctrl-alt-del */
       sa.sa_handler=sigwinch; sigaction(SIGWINCH,&sa,0);	/* keyboard request */
     }
-    if (errno) __write2("sigaction failed!\n");
+    if (errno) _puts("sigaction failed!\n");
   }
 
   if (infd<0 || outfd<0) {
