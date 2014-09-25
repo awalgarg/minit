@@ -34,6 +34,8 @@ endif
 
 ifneq ($(MINITROOT),)
 CFLAGS+="-DMINITROOT=\"$(MINITROOT)\""
+else
+MINITROOT=/etc/minit
 endif
 
 LDLIBS=-lowfat
@@ -78,7 +80,7 @@ killall5: killall5.c
 	$(DIET) $(CROSS)$(CC) $(CFLAGS) -o $@ $^
 
 install-files:
-	install -d $(DESTDIR)/etc/minit $(DESTDIR)/sbin $(DESTDIR)/bin $(DESTDIR)$(MANDIR)/man8
+	install -d $(DESTDIR)$(MINITROOT) $(DESTDIR)/sbin $(DESTDIR)/bin $(DESTDIR)$(MANDIR)/man8
 	install minit pidfilehack $(DESTDIR)/sbin
 	install write_proc hard-reboot minit-update $(DESTDIR)/sbin
 	install msvc serdo $(DESTDIR)/bin
@@ -87,7 +89,7 @@ install-files:
 	install -m 644 hard-reboot.8 minit-list.8 minit-shutdown.8 minit-update.8 minit.8 msvc.8 pidfilehack.8 serdo.8 $(DESTDIR)$(MANDIR)/man8
 
 install-fifos:
-	-mkfifo -m 600 $(DESTDIR)/etc/minit/in $(DESTDIR)/etc/minit/out
+	-mkfifo -m 600 $(DESTDIR)$(MINITROOT)/in $(DESTDIR)$(MINITROOT)/out
 
 install: install-files install-fifos
 
