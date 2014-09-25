@@ -89,6 +89,9 @@ scenarios most minit services are actually boot time housekeeping and
 initialization processes and not actual services that are expected to
 run for prolonged periods of time.
 
+If a symbolic link called "root" exists, minit will chdir there before
+running the service.
+
 .SH "CONVERTING A DAEMON INTO A SERVICE"
 
 The concept of minit works around long running service processes that do

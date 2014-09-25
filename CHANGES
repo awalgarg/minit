@@ -5,6 +5,10 @@
   fix (apparently unexploitable) stack clobber in serdo
     (found by Nikola Vladov, many thanks)
   add ulimit to serdo
+  a service can now contain a "root" symlink to where it should be
+    started
+  only install SIGWINCH and SIGINT if running with PID 1
+  you can now do "make MINITROOT=/var/minit"
 
 0.10:
   add sample script for /etc/minit/ctrlaltdel/run as

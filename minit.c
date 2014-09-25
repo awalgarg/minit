@@ -1,3 +1,5 @@
+#define _GNU_SOURCE
+
 #include <sys/types.h>
 #include <time.h>
 #include <string.h>
@@ -18,10 +20,13 @@
 #include <sys/reboot.h>
 #include "fmt.h"
 #include "str.h"
+#include <compiletimeassert.h>
 
 #include <write12.h>
 
 #include "minit.h"
+
+compiletimeassert(sizeof(MINITROOT) + 64 < PATH_MAX);
 
 #define MALLOC_TEST
 #if !defined(__dietlibc__) && !defined(__GLIBC__)
@@ -213,6 +218,7 @@ pid_t forkandexec(int pause,int service) {
   pid_t p;
   int fd;
   unsigned long len;
+  int islink;
   char *s=0;
   int argc;
   char *argv0=0;
@@ -262,17 +268,42 @@ again:
       argv[1]=0;
     }
     argv0=(char*)alloca(PATH_MAX+1);
-    if (!argv || !argv0) _exit(1);
+    if (!argv) _exit(1);
     if (readlink("run",argv0,PATH_MAX)<0) {
       if (errno!=EINVAL) _exit(1);	/* not a symbolic link */
-      argv0=strdup("./run");
-    }
-/*    chdir("/"); */
+      strcpy(argv0,"run");
+      islink=0;
+    } else
+      islink=1;
     argv[0]=strrchr(argv0,'/');
     if (argv[0])
       argv[0]++;
     else
       argv[0]=argv0;
+    argv[0]=strdupa(argv[0]);
+    if (islink && argv0[0]!='/') {
+      char* c=alloca(strlen(argv0)+sizeof(MINITROOT)+strlen(root[service].name+2));
+      char* d;
+      int fd=open(".",O_RDONLY|O_DIRECTORY);
+      stpcpy(stpcpy(stpcpy(stpcpy(c,MINITROOT "/"),root[service].name),"/"),argv0);
+      if (fd!=-1) {
+	/* c is now something like /etc/minit/default/../../../var/whatever/doit
+	* attempt to clean it up a little */
+	d=strrchr(c,'/');
+	*d=0;
+	if (chdir(c)==0) {
+	  *d='/';
+	  if (getcwd(argv0,PATH_MAX))
+	    strncat(argv0,d,PATH_MAX);
+	  fchdir(fd);
+	  close(fd);
+	} else {
+	  *d='/';
+	  argv0=c;
+	}
+      } else
+	argv0=c;
+    }
     if (root[service].__stdin != 0) {
       dup2(root[service].__stdin,0);
       fcntl(0,F_SETFD,0);
@@ -287,8 +318,9 @@ again:
       int i;
       for (i=3; i<1024; ++i) close(i);
     }
+    chdir("root");
     execve(argv0,argv,environ);
-    _exit(1);	
+    _exit(1);
   default:
     fd=open("sync",O_RDONLY);
     if (fd>=0) {
@@ -459,8 +491,10 @@ int main(int argc, char *argv[]) {
     sa.sa_flags=SA_RESTART | SA_NOCLDSTOP;
     sa.sa_handler=sigchild; sigaction(SIGCHLD,&sa,0);
     sa.sa_flags=SA_RESTART;
-    sa.sa_handler=sigint; sigaction(SIGINT,&sa,0);	/* ctrl-alt-del */
-    sa.sa_handler=sigwinch; sigaction(SIGWINCH,&sa,0);	/* keyboard request */
+    if (i_am_init) {
+      sa.sa_handler=sigint; sigaction(SIGINT,&sa,0);	/* ctrl-alt-del */
+      sa.sa_handler=sigwinch; sigaction(SIGWINCH,&sa,0);	/* keyboard request */
+    }
     if (errno) __write2("sigaction failed!\n");
   }
 
