@@ -409,7 +409,8 @@ int startservice(int service,int pause,int father) {
 
 void sulogin() {	/* exiting on an initialization failure is not a good idea for init */
   char *argv[]={"sulogin",0};
-  execve("/sbin/sulogin",argv,environ);
+  if (i_am_init)
+    execve("/sbin/sulogin",argv,environ);
   _exit(1);
 }
 
