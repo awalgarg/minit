@@ -174,6 +174,13 @@ int isup(int service) {
 
 int startservice(int service,int pause,int father);
 
+void sulogin() {	/* exiting on an initialization failure is not a good idea for init */
+  char *argv[]={"sulogin",0};
+  if (i_am_init)
+    execve("/sbin/sulogin",argv,environ);
+  _exit(1);
+}
+
 #undef debug
 void handlekilled(pid_t killed) {
   int i;
@@ -187,7 +194,7 @@ void handlekilled(pid_t killed) {
   if (killed == (pid_t)-1) {
     static int saidso;
     if (!saidso) { write(2,"all services exited.\n",21); saidso=1; }
-    if (i_am_init) exit(0);
+    if (i_am_init) sulogin(); else exit(0);
   }
   if (killed==0) return;
   i=findbypid(killed);
@@ -406,14 +413,6 @@ int startservice(int service,int pause,int father) {
   chdir(MINITROOT);
   return pid;
 }
-
-void sulogin() {	/* exiting on an initialization failure is not a good idea for init */
-  char *argv[]={"sulogin",0};
-  if (i_am_init)
-    execve("/sbin/sulogin",argv,environ);
-  _exit(1);
-}
-
 
 static void _puts(const char* s) {
   write(1,s,str_len(s));
