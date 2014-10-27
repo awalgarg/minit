@@ -28,7 +28,20 @@ And it is possible to watch multiple files with different triggers:
 
 % ftrigger '@echo a updated' /tmp/a '@echo b updated' /tmp/b
 
+.SH "RACE CONDITION"
+
+The inotify API has an inherent race condition.  ftrigger has to watch
+both the file and the directory it is in for changes.  If the file is
+newly created, ftrigger will receive a notification via the directory,
+and will then add a watch to the newly created file, to get notified if
+somebody closes the file who had it open for writing.
+
+If the other process closes the file before ftrigger has a chance to add
+the watch on the file, ftrigger will never get notified.  In practice, I
+have only seen this happen with touch, where the open(3) is immediately
+followed by the close(3), and there is no write(3) in the middle.
+
 .SH AUTHOR
-minit was written by Felix von Leitner and can be downloaded from
+ftrigger was written by Felix von Leitner and can be downloaded from
 .I http://www.fefe.de/minit/
 
