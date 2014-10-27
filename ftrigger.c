@@ -25,8 +25,10 @@ void sighandler(int signum) {
   wait(&status);
 }
 
+int v;
+
 int main(int argc,char* argv[]) {
-  int i,in,v=0;
+  int i,in;
   const char* command="make";
   struct stat ss;
   char buf[2048];
