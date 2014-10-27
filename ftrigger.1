@@ -9,14 +9,9 @@ ftrigger \- trigger an action if a file changes
 can watch a list of files and run shell commands if they change.
 
 .B ftrigger
-uses the inotify kernel notification mechanism if available, so
-it can trigger in real time.  With inotify, ftrigger will trigger when
-the file is closed after it was opened for writing.  Without inotify,
-this information is not available, so ftrigger might trigger when the
-file has only been partially written yet.  Make sure to use proper
-atomic file updates (write to a temp file and use rename(3) to move the
-new version over the old one when done) to update your files to avoid
-race conditions.
+uses the inotify kernel notification mechanism, so it triggers in real
+time.  ftrigger will trigger when the file is closed after it was opened
+for writing to avoid race conditions when the file is not fully written.
 
 .SH EXAMPLES
 
