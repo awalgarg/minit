@@ -59,7 +59,7 @@ int main(int argc,char* argv[]) {
 	size_t m=c-root[n].filename;
 	strcpy(root[n].dironly,root[n].filename);
 	root[n].fileonly=root[n].dironly+m+1;
-	*c=0;
+	root[n].fileonly[-1]=0;
       } else {
 	root[n].dironly[0]='.';
 	root[n].dironly[1]=0;
