@@ -41,6 +41,10 @@ the watch on the file, ftrigger will never get notified.  In practice, I
 have only seen this happen with touch, where the open(3) is immediately
 followed by the close(3), and there is no write(3) in the middle.
 
+To work around this race, ftrigger will also watch for modify events for
+the file, and if there aren't any within a second, it will assume the
+race happened and trigger on the file.
+
 .SH AUTHOR
 ftrigger was written by Felix von Leitner and can be downloaded from
 .I http://www.fefe.de/minit/

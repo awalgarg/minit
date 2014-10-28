@@ -15,7 +15,8 @@ struct trigger {
   const char* filename,* command;
   char* dironly,* fileonly;
   struct stat ss;
-  int idd,idf;	/* inotify-deskriptor */
+  int idd,idf,created;	/* inotify-deskriptor */
+  /* created = 1: got a create event on the dir, added a watch on the file, but no modify events on the file yet */
 }* root;
 int n;
 
@@ -78,9 +79,10 @@ int main(int argc,char* argv[]) {
       buffer_putmflush(buffer_2,"warning: could not stat file \"",root[i].filename,"\": ",strerror(errno),"\n");
     else
       root[i].idf=inotify_add_watch(in,root[i].filename,
-				    IN_CLOSE_WRITE|IN_MOVE_SELF|IN_DELETE_SELF);
+				    IN_CLOSE_WRITE|IN_MOVE_SELF|IN_DELETE_SELF|IN_MODIFY);
     root[i].idd=inotify_add_watch(in,root[i].dironly,
 				  IN_MOVED_TO|IN_CREATE);
+    root[i].created=0;
   }
 
   p.fd=in;
@@ -96,7 +98,18 @@ again:
 	break;
       }
       return 1;
-    case 0: continue;
+    case 0:
+      {
+	int foundone=0;
+	for (i=0; i<n; ++i)
+	  if (root[i].created==1) {
+	    memset(&root[i].ss,0,sizeof(root[i].ss));
+	    root[i].created=0;
+	    foundone=1;
+	  }
+	if (foundone) goto goodevent;
+      }
+      continue;
     case 1: break;
     };
     read(in,buf,sizeof(buf));
@@ -139,6 +152,12 @@ again:
 
     for (i=0; i<n; ++i) {
       if (root[i].idf==ie->wd) {
+	if (ie->mask & IN_MODIFY) {
+	  root[i].created=0;
+	  root[i].idf=inotify_add_watch(in,root[i].filename,
+				  IN_CLOSE_WRITE|IN_MOVE_SELF|IN_DELETE_SELF);
+	  continue;
+	}
 	if (ie->mask & (IN_DELETE_SELF|IN_MOVE_SELF)) {
 #if 0
 	  buffer_putmflush(buffer_1,root[i].filename," was ",
@@ -159,7 +178,8 @@ again:
 	  if (root[i].idf!=-1)
 	    inotify_rm_watch(in,root[i].idf);
 	  root[i].idf=inotify_add_watch(in,root[i].filename,
-				  IN_CLOSE_WRITE|IN_MOVE_SELF|IN_DELETE_SELF);
+				  IN_CLOSE_WRITE|IN_MOVE_SELF|IN_DELETE_SELF|IN_MODIFY);
+	  root[i].created=1;
 	  /* if the file was created, it will be empty now, wait for
 	    * the IN_CLOSE_WRITE event. */
 	  if (ie->mask & IN_CREATE) {
