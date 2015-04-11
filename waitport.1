@@ -1,0 +1,27 @@
+.TH waitport 1
+.SH NAME
+waitport \- wait for a local TCP service to show up
+.SH SYNOPSIS
+.B waitport port command ...
+
+.B waitport ip/port command ...
+
+.SH DESCRIPTION
+.B waitport
+will repeatedly do what netstat does (go through /proc/net/tcp and
+/proc/net/tcp6) and look for a specific TCP port in LISTEN state to show
+up. When that happens, it will run the rest of the command line.
+
+There is a timeout after 1000 tries (10 tries per second). If the port
+does not show up by then, waitport will abort with a non-zero exit code.
+
+This program is meant for use with minit, when one service starts a
+service, and another program should only be started once the first
+service has bound to the port (i.e. is accepting connections).
+
+Use waitport to resolve race conditions in dependency chains in minit.
+
+.SH AUTHOR
+waitinterface was written by Felix von Leitner and can be downloaded from
+.I http://www.fefe.de/minit/
+

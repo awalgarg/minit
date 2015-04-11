@@ -1,5 +1,5 @@
 all: minit msvc pidfilehack hard-reboot write_proc killall5 shutdown \
-minit-update serdo ftrigger
+minit-update serdo ftrigger waitinterface waitport # governor
 
 #CFLAGS=-pipe -march=i386 -fomit-frame-pointer -Os -I../dietlibc/include
 CC=gcc
@@ -51,6 +51,9 @@ msvc: msvc.o
 ftrigger: ftrigger.o
 minit-update: minit-update.o split.o openreadclose.o
 serdo: serdo.o
+waitinterface: waitinterface.o
+waitport: waitport.o
+governor: governor.o
 
 shutdown: shutdown.o split.o openreadclose.o opendevconsole.o
 	$(DIET) $(CROSS)$(CC) $(LDFLAGS) -o shutdown $^
@@ -63,7 +66,7 @@ shutdown: shutdown.o split.o openreadclose.o opendevconsole.o
 
 clean:
 	rm -f *.o minit msvc pidfilehack hard-reboot write_proc killall5 \
-	shutdown minit-update serdo ftrigger
+	shutdown minit-update serdo ftrigger waitinterface waitport governor
 
 test: test.c
 	gcc -nostdlib -o $@ $^ -I../dietlibc/include ../dietlibc/start.o ../dietlibc/dietlibc.a
@@ -84,7 +87,7 @@ install-files:
 	install -d $(DESTDIR)$(MINITROOT) $(DESTDIR)/sbin $(DESTDIR)/bin $(DESTDIR)$(MANDIR)/man8
 	install minit pidfilehack $(DESTDIR)/sbin
 	install write_proc hard-reboot minit-update $(DESTDIR)/sbin
-	install msvc serdo $(DESTDIR)/bin
+	install msvc serdo ftrigger waitinterface waitport $(DESTDIR)/bin
 	if test -f $(DESTDIR)/sbin/shutdown; then install shutdown $(DESTDIR)/sbin/mshutdown; else install shutdown $(DESTDIR)/sbin/shutdown; fi
 	test -f $(DESTDIR)/sbin/init || ln $(DESTDIR)/sbin/minit $(DESTDIR)/sbin/init
 	install -m 644 hard-reboot.8 minit-list.8 minit-shutdown.8 minit-update.8 minit.8 msvc.8 pidfilehack.8 serdo.8 $(DESTDIR)$(MANDIR)/man8

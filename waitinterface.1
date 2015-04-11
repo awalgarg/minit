@@ -1,0 +1,30 @@
+.TH waitinterface 1
+.SH NAME
+waitinterface \- wait for a network interface to show up
+.SH SYNOPSIS
+.B waitinterface ifname command ...
+
+.B waitinterfaceup ifname command ...
+.SH DESCRIPTION
+.B waitinterface
+will wait for /sys/class/net/ifname to show up (it will try for a few
+seconds, then abort and fail if nothing shows up).
+
+If it is called under the name waitinterfaceup (make a symbolic or hard
+link at installation!), it will also wait for the interface to go up. If
+that does not happen within a few seconds, it will abort and fail.
+
+If execution gets this far, the rest of the command line is run (using
+execve, so you have to pass in the full path to the command).
+
+This program is meant for use when one command loads a network driver
+into the kernel, and the next program wants to initialize it. There is a
+race condition between the kernel module creating the network interface
+and the initialization functions attempting to initialize that
+interface. In this case you can use waitinterface to delay the
+initialization until the interface is actually there.
+
+.SH AUTHOR
+waitinterface was written by Felix von Leitner and can be downloaded from
+.I http://www.fefe.de/minit/
+
