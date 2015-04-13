@@ -12,6 +12,8 @@
   add ftrigger (run a command if a file changes)
   add waitinterface and waitport (to resolve races)
   add powersave (demo tool to set up power saving, needs customization, not actually installed)
+  add governor (demo tool to set CPU frequency governor based on AC state,
+    not actually needed anymore with current hardware, not actually installed)
 
 0.10:
   add sample script for /etc/minit/ctrlaltdel/run as
