@@ -1,5 +1,5 @@
 all: minit msvc pidfilehack hard-reboot write_proc killall5 shutdown \
-minit-update serdo ftrigger waitinterface waitport # governor
+minit-update serdo ftrigger waitinterface waitport powersave # governor
 
 #CFLAGS=-pipe -march=i386 -fomit-frame-pointer -Os -I../dietlibc/include
 CC=gcc
@@ -53,6 +53,7 @@ minit-update: minit-update.o split.o openreadclose.o
 serdo: serdo.o
 waitinterface: waitinterface.o
 waitport: waitport.o
+powersave: powersave.o
 governor: governor.o
 
 shutdown: shutdown.o split.o openreadclose.o opendevconsole.o

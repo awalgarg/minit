@@ -10,6 +10,8 @@
   only install SIGWINCH and SIGINT if running with PID 1
   you can now do "make MINITROOT=/var/minit"
   add ftrigger (run a command if a file changes)
+  add waitinterface and waitport (to resolve races)
+  add powersave (demo tool to set up power saving, needs customization, not actually installed)
 
 0.10:
   add sample script for /etc/minit/ctrlaltdel/run as
