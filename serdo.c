@@ -2,12 +2,13 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <ctype.h>
-#include <errmsg.h>
 #include <sys/wait.h>
-#include <str.h>
-#include <byte.h>
-#include <scan.h>
 #include <sys/resource.h>
+
+#include <libowfat/str.h>
+#include <libowfat/byte.h>
+#include <libowfat/scan.h>
+#include <libowfat/errmsg.h>
 
 #define MAXENV 256
 char* envp[MAXENV+2];

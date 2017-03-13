@@ -1,7 +1,8 @@
 #include <unistd.h>
-#include <errmsg.h>
 #include <string.h>
 #include <fcntl.h>
+
+#include <libowfat/errmsg.h>
 
 const char acstate[]="/proc/acpi/ac_adapter/AC/state";
 const char sysacstate[]="/sys/class/power_supply/AC/online";

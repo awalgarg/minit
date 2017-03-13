@@ -5,13 +5,14 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include "str.h"
-#include "fmt.h"
-#include "buffer.h"
+#include <errno.h>
+
+#include <libowfat/str.h>
+#include <libowfat/fmt.h>
+#include <libowfat/buffer.h>
+#include <libowfat/errmsg.h>
 #define NOVARS
 #include "minit.h"
-#include <errmsg.h>
-#include <errno.h>
 
 static int infd,outfd;
 

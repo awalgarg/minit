@@ -2,14 +2,15 @@
 #include <errmsg.h>
 #include <time.h>
 #include <string.h>
-#include <fmt.h>
-#include <scan.h>
-#include <ip4.h>
-#include <ip6.h>
-#include <stralloc.h>
-#include <buffer.h>
 #include <fcntl.h>
 #include <ctype.h>
+
+#include <libowfat/fmt.h>
+#include <libowfat/scan.h>
+#include <libowfat/ip4.h>
+#include <libowfat/ip6.h>
+#include <libowfat/stralloc.h>
+#include <libowfat/buffer.h>
 
 static int netstat(const char* addr,unsigned int wantedport) {
   /* see linux/Documentation/networking/proc_net_tcp.txt */
@@ -66,7 +67,8 @@ parseerror:
       /* Next token is the same thing, but we don't really need it, so
        * just skip till next whitespace */
       for (; *c && *c!=' '; ++c) ;
-      if (*c!=' ') goto parseerror; ++c;
+      if (*c!=' ') goto parseerror;
+      ++c;
       /* Next is the state; if we are looking at tcp, 0A means LISTEN */
       if (filename[10]=='t' && c[0]=='0' && c[1]=='A') {
 	/* TCP LISTEN */

@@ -7,8 +7,9 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
-#include "str.h"
-#include "buffer.h"
+
+#include <libowfat/str.h>
+#include <libowfat/buffer.h>
 
 #include "minit.h"
 

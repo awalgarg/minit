@@ -1,6 +1,5 @@
 #define _GNU_SOURCE
 #include <sys/types.h>
-#include <open.h>
 #include <string.h>
 #include <stdlib.h>
 #include <dirent.h>
@@ -8,6 +7,8 @@
 #include <sys/socket.h>
 #include <net/if.h>
 #include <sys/ioctl.h>
+
+#include <libowfat/open.h>
 
 int write_to(const char* filename,const char* string) {
   int fd=open_write(filename);

@@ -18,9 +18,10 @@
 #include <stdlib.h>
 #include <alloca.h>
 #include <sys/reboot.h>
-#include "fmt.h"
-#include "str.h"
-#include <compiletimeassert.h>
+
+#include <libowfat/fmt.h>
+#include <libowfat/str.h>
+#include <libowfat/compiletimeassert.h>
 
 #include "minit.h"
 

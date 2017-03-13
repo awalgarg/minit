@@ -2,7 +2,7 @@
 #include <sys/reboot.h>
 #include <stdlib.h>
 
-#include "str.h"
+#include <libowfat/str.h>
 
 #define ABORTMSG "hard-reboot: Aborted.\n"
 #define USAGE "Say \"hard-reboot (RESTART|HALT|POWER_OFF)\" if you really mean it.\n"
