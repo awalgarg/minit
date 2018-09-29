@@ -56,34 +56,39 @@ waitport: waitport.o
 powersave: powersave.o
 governor: governor.o
 
-shutdown: shutdown.o split.o openreadclose.o opendevconsole.o
-	$(DIET) $(CROSS)$(CC) $(LDFLAGS) -o shutdown $^
+sepcode:
+	echo "int main() { return 0; }" > true.c
+	if $(DIET) $(CROSS)$(CC) $(CFLAGS) $(FLAGS) -Wl,-z,noseparate-code -o true true.c ; then echo -Wl,-z,noseparate-code 2>/dev/null; fi > sepcode
+	rm -f true true.c
+
+shutdown: shutdown.o split.o openreadclose.o opendevconsole.o sepcode
+	$(DIET) $(CROSS)$(CC) $(LDFLAGS) -o shutdown $(subst sepcode,,$^) $(shell cat sepcode)
 
 %.o: %.c
 	$(DIET) $(CROSS)$(CC) $(CFLAGS) -c $<
 
-%: %.o
-	$(DIET) $(CROSS)$(CC) $(LDFLAGS) -o $@ $^ $(LDLIBS)
+%: %.o sepcode
+	$(DIET) $(CROSS)$(CC) $(LDFLAGS) -o $@ $(subst sepcode,,$^) $(LDLIBS) $(shell cat sepcode)
 
 clean:
 	rm -f *.o minit msvc pidfilehack hard-reboot write_proc killall5 \
 	shutdown minit-update serdo ftrigger waitinterface waitport \
-	governor powersave
+	governor powersave sepcode
 
 test: test.c
 	gcc -nostdlib -o $@ $^ -I../dietlibc/include ../dietlibc/start.o ../dietlibc/dietlibc.a
 
-pidfilehack: pidfilehack.c
-	$(DIET) $(CROSS)$(CC) $(CFLAGS) -o $@ $^
+pidfilehack: pidfilehack.c sepcode
+	$(DIET) $(CROSS)$(CC) $(CFLAGS) -o $@ $< $(shell cat sepcode)
 
-hard-reboot: hard-reboot.c
-	$(DIET) $(CROSS)$(CC) $(CFLAGS) -o $@ $^
+hard-reboot: hard-reboot.c sepcode
+	$(DIET) $(CROSS)$(CC) $(CFLAGS) -o $@ $< $(shell cat sepcode)
 
-write_proc: write_proc.c
-	$(DIET) $(CROSS)$(CC) $(CFLAGS) -o $@ $^
+write_proc: write_proc.c sepcode
+	$(DIET) $(CROSS)$(CC) $(CFLAGS) -o $@ $< $(shell cat sepcode)
 
-killall5: killall5.c
-	$(DIET) $(CROSS)$(CC) $(CFLAGS) -o $@ $^
+killall5: killall5.c sepcode
+	$(DIET) $(CROSS)$(CC) $(CFLAGS) -o $@ $< $(shell cat sepcode)
 
 install-files:
 	install -d $(DESTDIR)$(MINITROOT) $(DESTDIR)/sbin $(DESTDIR)/bin $(DESTDIR)$(MANDIR)/man8 $(DESTDIR)$(MANDIR)/man1
