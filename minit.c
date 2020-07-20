@@ -261,6 +261,9 @@ again:
       fcntl(1,F_SETFD,0);
       fcntl(2,F_SETFD,0);
     }
+    // openreadclose and split allocate memory.
+    // We leak it here, because we are in the child process that is
+    // about to execve somebody else, at which point the OS frees all.
     if (!openreadclose("nice",&s,&len)) {
       int n=atoi(s);
       nice(n);
@@ -373,8 +376,10 @@ int startservice(int service,int pause,int father) {
     startservice(root[service].logservice,pause,service);
   if (chdir(MINITROOT) || chdir(root[service].name)) return -1;
   if ((dir=open(".",O_RDONLY))>=0) {
+    // openreadclose allocates memory and reads the file contents into it. 
+    // Need to free(s) independent of openreadclose return value
     if (!openreadclose("depends",&s,&len)) {
-      char **deps;
+      char **deps=0;
       int depc,i;
       deps=split(s,'\n',&depc,0,0);
       for (i=0; i<depc; i++) {
@@ -395,7 +400,9 @@ int startservice(int service,int pause,int father) {
 	  startservice(Service,0,service);
       }
       fchdir(dir);
+      free(deps);
     }
+    free(s);
     pid=startnodep(service,pause);
 
 #if 0

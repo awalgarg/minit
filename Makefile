@@ -3,7 +3,8 @@ minit-update serdo ftrigger waitinterface waitport powersave # governor
 
 #CFLAGS=-pipe -march=i386 -fomit-frame-pointer -Os -I../dietlibc/include
 CC=gcc
-CFLAGS=-Wall -W -pipe -fomit-frame-pointer -Os
+PIE=
+CFLAGS=-Wall -W -pipe -fomit-frame-pointer -Os $(PIE)
 CROSS=
 #CROSS=arm-linux-
 LDFLAGS=-s
@@ -114,3 +115,5 @@ tar: clean rename
 rename:
 	if test $(CURNAME) != $(VERSION); then cd .. && mv $(CURNAME) $(VERSION); fi
 
+pie:
+	$(MAKE) all PIE=-fpie
